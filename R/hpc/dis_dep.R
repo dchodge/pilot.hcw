@@ -11,6 +11,7 @@ library(rcppfunchcw)
 taskIdChar <- Sys.getenv("SGE_TASK_ID")
 taskIdInteger <- (as.numeric(taskIdChar))
 
+load(here::here("data", "hcwpre_data.RDS")) # hcwpre
 load(file = here::here("data", paste0("modelinfo_", hcwpre$study_name_short, ".RDS"))) # all_models_hcw_pre
 
 1:length(all_models_hcw_pre) %>% map(~
