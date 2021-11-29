@@ -1,0 +1,102 @@
+
+# Make classes out of each data set
+```{r}
+
+library(latex2exp)
+library(patchwork)
+library(here)
+require(plyr)
+require(data.table)
+require(tidyverse)
+library(devtools)
+# Required for this analysis
+require(reshape2)
+require(foreach)
+require(doParallel)
+require(bayesplot)
+require(coda)
+require(ggplot2)
+require(viridis)
+require(ggpubr)
+
+require(foreach)
+require(doParallel)
+require(Rcpp)
+
+require(extrafont)
+require(showtext)
+font_add("Avenir", "/Users/davidhodgson/Documents/personal/fonts/avenir_ff/AvenirLTStd-Book.otf")  
+showtext_auto()
+theme_set(theme_light())
+library(wesanderson)
+
+```
+
+# Load packages and data
+Currently using the serosolver 
+```{r}
+
+#install_github("https://github.com/dchodge/serosolver", ref = "custom_ab")
+
+#install("/Users/davidhodgson/Documents/research/flu/serosolver_vac")
+#install(here::here("rcppfunchcw"))
+devtools::load_all()
+
+require(serosolver)
+require(rcppfunchcw)
+ 
+load(here::here("data", "hcwpre_data.RDS")) # hcwpre
+
+get_model_info_hcw_pre(hcwpre)
+
+````
+
+```{r}
+
+load(file = here::here("data", paste0("modelinfo_", hcwpre$study_name_short, ".RDS"))) #all_models_hcw_pre
+# 1:length(all_models_hcw_pre)
+1:9 %>% map(~setup_run_serosolver_working_local(
+    all_models_hcw_pre[[.x]],
+    chains = 4,
+    pt = TRUE,
+    filename = "dis_dep",
+    cross_sectional = TRUE,
+    continue_run = FALSE)
+)
+
+```
+
+# Load the mcmc and plot the traces and schematics of titre loss
+```{r}
+
+all_models_hcw_pre_test <- all_models_hcw_pre
+all_post_test <- all_models_hcw_pre_test %>%
+    map(~load_mcmc_post(.x,
+        fit_place = "local",
+        folder_name_1 = "dis_dep",
+        cross_sectional = TRUE,
+        burnin = 0,
+        thin = 1))
+
+
+purrr::map2(all_post_test, all_models_hcw_pre_test, ~plot_traces(.x, .y, file = "dis_dep/cross_sec"))
+purrr::map2(all_post_test, all_models_hcw_pre_test, ~plot_titre_post(.x, .y, file = "dis_dep/cross_sec"))
+
+```
+
+# Comparison figures and statistics in sum_figs folder
+
+```{r}
+
+# Plots bos plots of the 8 different models
+plot_post_compare(all_post_test, all_models_hcw_pre_test, file = "dis_dep/cross_sec")
+
+# Plots the mpsrf for the models to check convergences
+mpsrf_df <- purrr::map2(all_post_test[2:9], all_models_hcw_pre_test[2:9], ~calc_mpsrf(.x, .y)) %>% bind_rows
+save_plot_mpsrf(mpsrf_df, all_models_hcw_pre_test[[1]], file = "dis_dep/cross_sec")
+
+# Plots the waics for the models and compare, TAKES AGES
+waics <- purrr::map2(all_post_test, all_models_hcw_pre_test, ~calc_waic(.x, .y)) %>% bind_rows
+save_plot_waic(waics, file = "dis_dep/cross_sec")
+
+```
