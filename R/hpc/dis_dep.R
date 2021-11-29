@@ -7,10 +7,12 @@ library(doParallel)
 # Must install these two
 library(serosolver)
 library(rcppfunchcw)
+library(devtools)
 
 taskIdChar <- Sys.getenv("SGE_TASK_ID")
 taskIdInteger <- (as.numeric(taskIdChar))
 
+devtools::load_all() # hcwpre
 load(here::here("data", "hcwpre_data.RDS")) # hcwpre
 load(file = here::here("data", paste0("modelinfo_", hcwpre$study_name_short, ".RDS"))) # all_models_hcw_pre
 
