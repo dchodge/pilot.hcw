@@ -7,4 +7,4 @@
 
 module load R/4.0.3
 module load gcc/6.5.0
-R CMD BATCH R/serosolver_vac.R myrscript_p_${SGE_TASK_ID}.out
+R CMD BATCH dis_dep.R output_${SGE_TASK_ID}.out

@@ -47,6 +47,7 @@ setup_run_serosolver_working_local <- function(
     ## Not all random starting conditions return finite likelihood, so for each chain generate random
     ## conditions until we get one with a finite likelihood#
    # for (f in filenames) {
+    #for (f in filenames) {
     res <- foreach(f = filenames, .packages = c('rcppfunchcw', 'magrittr', 'serosolver', 'tidyr', 'data.table', 'plyr', 'dplyr')) %dopar% {
 
         prior_on_mu_vac <- function(par_tab) {
