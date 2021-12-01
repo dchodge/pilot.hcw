@@ -42,7 +42,7 @@ setup_run_serosolver_working_local <- function(
                           "move_size"=3,"hist_opt"=1,"swap_propn"=0.5,
                           "hist_switch_prob"=0.5,"year_swap_propn" = 1,
                           "temperature" = seq(1, temp_ladder_len, by = 1),
-                          "parallel_tempering_iter" = 5)
+                          "parallel_tempering_iter" = 5, "min_temp_diff" = 0.3)
                                     # function in post
     ## Not all random starting conditions return finite likelihood, so for each chain generate random
     ## conditions until we get one with a finite likelihood#
