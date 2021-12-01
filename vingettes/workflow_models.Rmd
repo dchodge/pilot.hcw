@@ -37,11 +37,10 @@ Currently using the serosolver
 ```{r}
 
 #install_github("https://github.com/dchodge/serosolver", ref = "custom_ab")
-
 #install("/Users/davidhodgson/Documents/research/flu/serosolver_vac")
 #install(here::here("rcppfunchcw"))
-devtools::load_all()
 
+devtools::load_all()
 require(serosolver)
 require(rcppfunchcw)
  
