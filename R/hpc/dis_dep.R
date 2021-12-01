@@ -13,13 +13,12 @@ library(here)
 taskIdChar <- Sys.getenv("SGE_TASK_ID")
 taskIdInteger <- (as.numeric(taskIdChar))
 
+#install_github("https://github.com/dchodge/serosolver", ref = "custom_ab")
+#install(here::here("rcppfunchcw"))
+
 devtools::load_all() # hcwpre
 load(here::here("data", "hcwpre_data.RDS")) # hcwpre
 load(file = here::here("data", paste0("modelinfo_", hcwpre$study_name_short, ".RDS"))) # all_models_hcw_pre
-
-cat(str(hcwpre))
-cat(str(all_models_hcw_pre))
-cat("\nHELLO", taskIdInteger)
 
 setup_run_serosolver_working_local(
         all_models_hcw_pre[[taskIdInteger]],

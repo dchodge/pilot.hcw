@@ -14,7 +14,7 @@ make_antigenic_maps_vac1_n <- function(antigenic_map_melted, theta) {
 
     antigenic_map_long <- create_cross_reactivity_vector(antigenic_map_melted, theta["sigma1"])
     antigenic_map_short <- create_cross_reactivity_vector(antigenic_map_melted, theta["sigma2"])
-    antigenic_map_long_vac <- create_cross_reactivity_vector(antigenic_map_melted, theta["sigma1"] * theta["sigma1_vac"])
+    antigenic_map_long_vac <- create_cross_reactivity_vector(antigenic_map_melted, theta["sigma1_vac"])
     antigenic_map_short_vac <- create_cross_reactivity_vector(antigenic_map_melted, theta["sigma2_vac"])
 
     return(list(long = antigenic_map_long, short = antigenic_map_short, long_vac = antigenic_map_long_vac, short_vac = antigenic_map_short_vac))

@@ -5,8 +5,8 @@ get_model_info_hcw_pre <- function(study) {
             list("mu_vac",       1, 1, 0.1, 0, 1,  0, 1, 1),
             list("mu_short_vac", 0, 1, 0.1, 0, 8,  1, 3, 1),
             list("wane_vac",     0, 1, 0.1, 0, 1,    0.01,  0.1, 1),
-            list("tau_prev_vac", 1, 1, 0.1,  0, 1,  0.01, 0.1, 1),
-            list("sigma1_vac",   1, 1, 0.1, 0, 5,  0, 1, 1),
+            list("tau_prev_vac", 0, 1, 0.1,  0, 1,  0.01, 0.1, 1),
+            list("sigma1_vac",   0, 1, 0.1, 0, 1,  0.01, 0.1, 1),
             list("sigma2_vac",   0, 1, 0.1, 0, 1,  0.01, 0.1, 1)
             )
 
