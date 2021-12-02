@@ -117,6 +117,15 @@ purrr::map2(all_post_test, all_models_hcw_pre_test, ~plot_titre_post(.x, .y, fil
 
 ```
 
+```{r}
+
+average <- all_post_test[[2]]$theta_chain[2200:4404, c("mu", "mu_vac", "mu_short_vac", "wane_vac")] %>% apply(2, mean)
+
+c(average[["mu"]] * average[["mu_vac"]], average[["mu"]] * average[["mu_vac"]] + (average[["mu_short_vac"]] - ((1:11) * average[["wane_vac"]])))
+
+
+```
+
 # Comparison figures and statistics in sum_figs folder
 
 ```{r}

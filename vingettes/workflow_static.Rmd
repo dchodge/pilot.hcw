@@ -83,17 +83,19 @@ sero_data_base <- sero_data %>%
         pivot_longer(c(day30_change, day180_change), names_to = "time", values_to = "prop") %>%
         mutate(time = case_when(time == "day30_change"~"30", time == "day180_change"~"180"))
  
-sero_data_base %>%
+p1 <- sero_data_base %>%
         ggplot(aes(x = virus_isol_yr, y = prop * 100, )) +
                 geom_line(aes(group = virus_isol_yr)) +
                 geom_point(aes(fill = time), shape = 21, size = 3) +
                 labs(x = "Year of circulating virus", y = "Change in titre post-vac (%)", fill = "Days post-vac")
 
-sero_data_base %>%
+p2 <- sero_data_base %>%
         ggplot(aes(x = base, y = prop * 100, )) +
                 geom_line(aes(group = virus_isol_yr)) +
                 geom_point(aes(fill = time), shape = 21, size = 3) +
                 labs(x = "Start titre value", y = "Change in titre post-vac (%)", fill = "Days post-vac")
+
+p1 / p2
 
 ```
 
