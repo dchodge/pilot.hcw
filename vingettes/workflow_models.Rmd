@@ -46,16 +46,18 @@ require(rcppfunchcw)
  
 load(here::here("data", "hcwpre_data.RDS")) # hcwpre
 
-get_model_info_hcw_pre(hcwpre)
+get_model_info_hcw_pre_cross(hcwpre)
+get_model_info_hcw_pre_full(hcwpre)
+
 
 ````
 
 # Fitting is done in a separate R script
 ```{r}
 
-# 1:length(all_models_hcw_pre)
+load(file = here::here("data", paste0("modelinfo_cross_", hcwpre$study_name_short, ".RDS"))) #all_models_hcw_pre_cross
 1:9 %>% map(~setup_run_serosolver_working_local(
-    all_models_hcw_pre[[.x]],
+    all_models_hcw_pre_cross[[.x]],
     chains = 4,
     pt = TRUE,
     filename = "dis_dep",
@@ -65,12 +67,26 @@ get_model_info_hcw_pre(hcwpre)
 
 ```
 
+
+```{r}
+
+load(file = here::here("data", paste0("modelinfo_full_", hcwpre$study_name_short, ".RDS"))) #all_models_hcw_pre_full
+1:4 %>% map(~setup_run_serosolver(
+    all_models_hcw_pre_full[[.x]],
+    chains = 4,
+    pt = TRUE,
+    filename = "dis_dep",
+    cross_sectional = FALSE,
+    continue_run = FALSE)
+)
+
+```
+
 # Load the mcmc and plot the traces and schematics of titre loss
 ```{r}
 
-load(file = here::here("data", paste0("modelinfo_", hcwpre$study_name_short, ".RDS"))) #all_models_hcw_pre
 
-all_models_hcw_pre_test <- all_models_hcw_pre
+all_models_hcw_pre_test <- all_models_hcw_pre_cross
 all_post_test <- all_models_hcw_pre_test %>%
     map(~load_mcmc_post(.x,
         fit_place = "local",
@@ -81,6 +97,32 @@ all_post_test <- all_models_hcw_pre_test %>%
 
 purrr::map2(all_post_test, all_models_hcw_pre_test, ~plot_traces(.x, .y, file = "dis_dep/cross_sec"))
 purrr::map2(all_post_test, all_models_hcw_pre_test, ~plot_titre_post(.x, .y, file = "dis_dep/cross_sec"))
+
+```
+
+```{r}
+
+
+all_models_hcw_pre_test <- all_models_hcw_pre_full
+all_post_test <- all_models_hcw_pre_test %>%
+    map(~load_mcmc_post(.x,
+        fit_place = "local",
+        folder_name_1 = "dis_dep",
+        cross_sectional = FALSE,
+        burnin = 0,
+        thin = 1))
+
+purrr::map2(all_post_test, all_models_hcw_pre_test, ~plot_traces(.x, .y, file = "dis_dep/full"))
+purrr::map2(all_post_test, all_models_hcw_pre_test, ~plot_titre_post(.x, .y, file = "dis_dep/full"))
+
+```
+
+```{r}
+
+average <- all_post_test[[2]]$theta_chain[2200:4404, c("mu", "mu_vac", "mu_short_vac", "wane_vac")] %>% apply(2, mean)
+
+c(average[["mu"]] * average[["mu_vac"]], average[["mu"]] * average[["mu_vac"]] + (average[["mu_short_vac"]] - ((1:11) * average[["wane_vac"]])))
+
 
 ```
 

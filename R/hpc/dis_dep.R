@@ -20,7 +20,7 @@ devtools::load_all() # hcwpre
 load(here::here("data", "hcwpre_data.RDS")) # hcwpre
 load(file = here::here("data", paste0("modelinfo_", hcwpre$study_name_short, ".RDS"))) # all_models_hcw_pre
 
-setup_run_serosolver_working_local(
+setup_run_serosolver(
         all_models_hcw_pre[[taskIdInteger]],
         chains = 4,
         pt = TRUE,
