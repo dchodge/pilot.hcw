@@ -36,9 +36,9 @@ library(wesanderson)
 Currently using the serosolver 
 ```{r}
 
-#install_github("https://github.com/dchodge/serosolver", ref = "custom_ab")
+install_github("https://github.com/dchodge/serosolver", ref = "custom_ab")
 #install("/Users/davidhodgson/Documents/research/flu/serosolver_vac")
-#install(here::here("rcppfunchcw"))
+install(here::here("rcppfunchcw"))
 
 devtools::load_all()
 require(serosolver)
@@ -56,7 +56,7 @@ get_model_info_hcw_pre_full(hcwpre)
 ```{r}
 
 load(file = here::here("data", paste0("modelinfo_cross_", hcwpre$study_name_short, ".RDS"))) #all_models_hcw_pre_cross
-1:9 %>% map(~setup_run_serosolver_working_local(
+1:9 %>% map(~setup_run_serosolver(
     all_models_hcw_pre_cross[[.x]],
     chains = 4,
     pt = TRUE,
