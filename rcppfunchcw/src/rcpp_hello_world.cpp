@@ -387,7 +387,7 @@ void ab_kin_vac_prev_hist(
   double mu_vac = theta["mu_vac"];
   double tau_prev_vac = theta["tau_prev_vac"];
   double mu_short_vac = theta["mu_short_vac"];
-  double wane_vac = theta["wane_vac"] + mu_short_vac / 12;
+  double wane_vac = theta["wane_vac"];
   double rho_boost = theta["rho_boost"];
   double rho_wane = theta["rho_wane"];
 
@@ -472,31 +472,23 @@ void ab_kin_vac_prev_hist(
 
       if (indicatior_vac[x] & (vac_flag)) {
           ++n_vac;
-          rho_boost_par = 1;
-          rho_wane_par = 1;
-
           if(sampling_time > vaccination_times[x_vac]) {
 
-            time = sampling_time - vaccination_times[x_vac]; // Time er vaccination
-            wane_amount_vac = MAX(0, 1.0 - (wane_vac*rho_wane_par*time)); // Basic waning function
+            if (x_vac >= 1) {
+              if (vaccination_times[x_vac - 1] == 24180) {
+                rho_boost_par = rho_boost;
+                rho_wane_par = rho_wane;
+              }
+            }
+
+            time = sampling_time - vaccination_times[x_vac] - 1; // Time er vaccination
+            wane_amount_vac = MAX(0, 1.0 - (((mu_short_vac * rho_wane_par) / 12 + wane_vac)*time*rho_wane_par)); // Basic waning function
             seniority = MAX(0, 1.0 - tau_prev_vac*(n_inf + n_vac - 1.0)); // Antigenic seniority
             vac_map_index = vaccination_strain_indices_tmp[x_vac]; // Index of this vaccinating strain in antigenic map
 
-            if (time >= 12) { // within a year 
-              wane_amount_vac = 0;
-            } else { 
-              if (x_vac >= 1) {
-                if (vaccination_times[x_vac - 1] == 24180) {
-                  rho_boost_par = rho_boost;
-                  rho_wane_par = rho_wane;
-                }
-              }
-            }
- 
-
             for (int k = 0; k < n_titres; ++k) {
               index = measurement_strain_indices[tmp_titre_index + k]*number_strains + vac_map_index;
-              predicted_titres[tmp_titre_index + k] += (seniority) * ((mu*mu_vac * antigenic_map_long_vac[index]) +
+              predicted_titres[tmp_titre_index + k] += (seniority) * ((mu * mu_vac * antigenic_map_long_vac[index]) +
                 ((mu_short_vac * rho_boost_par) * antigenic_map_short_vac[index]) * wane_amount_vac);
             }
           }
