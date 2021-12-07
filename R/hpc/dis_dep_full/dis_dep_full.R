@@ -26,5 +26,5 @@ setup_run_serosolver(
         iterations = 200000,
         pt = TRUE,
         filename = "dis_dep",
-        cross_sectional = TRUE,
+        cross_sectional = FALSE,
         continue_run = FALSE)
