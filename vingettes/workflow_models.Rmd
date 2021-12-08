@@ -18,6 +18,7 @@ require(coda)
 require(ggplot2)
 require(viridis)
 require(ggpubr)
+library(mvoutlier)
 
 require(foreach)
 require(doParallel)
@@ -85,9 +86,9 @@ load(file = here::here("data", paste0("modelinfo_full_", hcwpre$study_name_short
 # Load the mcmc and plot the traces and schematics of titre loss
 ```{r}
 
-
-all_models_hcw_pre_test <- all_models_hcw_pre_cross
-all_post_test <- all_models_hcw_pre_test %>%
+load(file = here::here("data", paste0("modelinfo_cross_", hcwpre$study_name_short, ".RDS"))) #all_models_hcw_pre_cross
+all_models_hcw_pre_cross <- all_models_hcw_pre
+all_post_test_cross <- all_models_hcw_pre_cross %>%
     map(~load_mcmc_post(.x,
         fit_place = "local",
         folder_name_1 = "dis_dep",
@@ -95,16 +96,16 @@ all_post_test <- all_models_hcw_pre_test %>%
         burnin = 0,
         thin = 1))
 
-purrr::map2(all_post_test, all_models_hcw_pre_test, ~plot_traces(.x, .y, file = "dis_dep/cross_sec"))
-purrr::map2(all_post_test, all_models_hcw_pre_test, ~plot_titre_post(.x, .y, file = "dis_dep/cross_sec"))
+purrr::map2(all_post_test_cross, all_models_hcw_pre_cross, ~plot_traces(.x, .y, file = "dis_dep/cross_sec"))
+purrr::map2(all_post_test_cross, all_models_hcw_pre_cross, ~plot_histogram(.x, .y, file = "dis_dep/cross_sec"))
+purrr::map2(all_post_test_cross, all_models_hcw_pre_cross, ~plot_titre_post(.x, .y, file = "dis_dep/cross_sec"))
 
 ```
 
 ```{r}
 
-
-all_models_hcw_pre_test <- all_models_hcw_pre_full
-all_post_test <- all_models_hcw_pre_test %>%
+load(file = here::here("data", paste0("modelinfo_full_", hcwpre$study_name_short, ".RDS"))) #all_models_hcw_pre_full
+all_post_test_full <- all_models_hcw_pre_full %>%
     map(~load_mcmc_post(.x,
         fit_place = "local",
         folder_name_1 = "dis_dep",
@@ -112,15 +113,14 @@ all_post_test <- all_models_hcw_pre_test %>%
         burnin = 0,
         thin = 1))
 
-purrr::map2(all_post_test, all_models_hcw_pre_test, ~plot_traces(.x, .y, file = "dis_dep/full"))
-purrr::map2(all_post_test, all_models_hcw_pre_test, ~plot_titre_post(.x, .y, file = "dis_dep/full"))
+purrr::map2(all_post_test_full, all_models_hcw_pre_full, ~plot_traces(.x, .y, file = "dis_dep/full"))
+purrr::map2(all_post_test_full, all_models_hcw_pre_full, ~plot_titre_post(.x, .y, file = "dis_dep/full"))
 
 ```
 
 ```{r}
 
 average <- all_post_test[[2]]$theta_chain[2200:4404, c("mu", "mu_vac", "mu_short_vac", "wane_vac")] %>% apply(2, mean)
-
 c(average[["mu"]] * average[["mu_vac"]], average[["mu"]] * average[["mu_vac"]] + (average[["mu_short_vac"]] - ((1:11) * average[["wane_vac"]])))
 
 
@@ -130,15 +130,33 @@ c(average[["mu"]] * average[["mu_vac"]], average[["mu"]] * average[["mu_vac"]] +
 
 ```{r}
 
-# Plots bos plots of the 8 different models
-plot_post_compare(all_post_test, all_models_hcw_pre_test, file = "dis_dep/cross_sec")
+# Trim the the data, use last 50% and throw out outliers 
+all_post_test_cross_trim <- vector(mode = "list", length = 9)
+samp_no_list <- vector(mode = "list", length = 9)
+for (p in 1:9) { 
+    L <- nrow(all_post_test_cross[[p]]$theta_list_chain[[1]])
+    B <- round(L / 2)
+    chain_list <- all_post_test_cross[[p]]$theta_list_chain
+    trimmed_post_list <- chain_list %>% map(~.x[B:L, all_models_hcw_pre_cross[[p]]$other$pars_plot])
+    samp_no_list[[p]] <- chain_list %>% map(~.x[B:L, c("sampno")])
+
+    bool_vec_list <- trimmed_post_list %>% map(~aq.plot(.x,
+            delta = qchisq(0.975, df = ncol(trimmed_post_list[[1]])), quan = 1, alpha = 0.01)[[1]])
+    all_post_test_cross_trim[[p]] <- 1:4 %>% map(~as.data.frame(trimmed_post_list[[.x]][!bool_vec_list[[.x]], ]))
+}
+
+pad_inf_chain(all_post_test_cross[[1]]$inf_chain)
+all_post_test_cross[[1]]$inf_chain %>% filter(sam)
+# Plots box plots of the 8 different models
+plot_post_compare(all_post_test_cross_trim, all_models_hcw_pre_cross, file = "dis_dep/cross_sec")
 
 # Plots the mpsrf for the models to check convergences
-mpsrf_df <- purrr::map2(all_post_test[2:9], all_models_hcw_pre_test[2:9], ~calc_mpsrf(.x, .y)) %>% bind_rows
-save_plot_mpsrf(mpsrf_df, all_models_hcw_pre_test[[1]], file = "dis_dep/cross_sec")
+mpsrf_df <- purrr::map2(all_post_test_cross_trim[2:9], all_models_hcw_pre_cross[2:9], ~calc_mpsrf(.x, .y)) %>% bind_rows
+save_plot_mpsrf(mpsrf_df, all_models_hcw_pre_cross[[1]], file = "dis_dep/cross_sec")
 
 # Plots the waics for the models and compare, TAKES AGES
-waics <- purrr::map2(all_post_test, all_models_hcw_pre_test, ~calc_waic(.x, .y)) %>% bind_rows
-save_plot_waic(waics, file = "dis_dep/cross_sec")
+
+waics <- purrr::pmap(list(all_post_test_cross, samp_no_list, all_models_hcw_pre_cross), ~calc_waic(..1, ..2, ..3))
+save_plot_waic(waics[2:9], file = "dis_dep/cross_sec")
 
 ```

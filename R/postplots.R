@@ -14,19 +14,22 @@ load_mcmc_post <- function(model_info, fit_place, folder_name_1, cross_sectional
     posteriors
 }
 
-    # get log_prop and make a matrix in which rows are for each sample and column for each observation
+# get log_prop and make a matrix in which rows are for each sample and column for each observation
 plot_traces <- function(postfull, model_info, file) {
 
     list_chains <- postfull$theta_list_chains
     j <- 1
-## Look at diagnostics for the free parameters
-    list_chains1 <- lapply(list_chains, function(x) x[, c(model_info$other$pars_plot, "total_infections",
-                                                     "lnlike", "prior_prob")])
-    for (t_par in model_info$others$pars_plot_trans) {
-        list_chains1 <- seq_len(length(list_chains1)) %>% map(~(list_chains1[[.x]] %>%
-            as.data.frame %>% mutate(!!t_par := logit(list_chains1[[.x]][, t_par], model_info$other$upper_boundary[j]))  %>% as.matrix))
-            j <- j + 1
-    }
+
+    L <- nrow(list_chains[[1]])
+    B <- round(L / 2)
+    list_chains1 <- lapply(list_chains, 
+        function(x) x[B:L, 
+            c(model_info$other$pars_plot, "total_infections", "lnlike", "prior_prob")])
+  #  for (t_par in model_info$others$pars_plot_trans) {
+  #      list_chains1 <- seq_len(length(list_chains1)) %>% map(~(list_chains1[[.x]] %>%
+  #          as.data.frame %>% mutate(!!t_par := logit(list_chains1[[.x]][, t_par], model_info$other$upper_boundary[j]))  %>% as.matrix))
+   #         j <- j + 1
+  #  }
 
     p_theta_trace <- mcmc_trace(list_chains1)
     savepath <- here::here("outputs", model_info$other$study$study_name_short, "fits", file, model_info$other$model_name)
@@ -34,28 +37,50 @@ plot_traces <- function(postfull, model_info, file) {
     ggsave(p_theta_trace, filename = paste0(savepath, "/", "traceplot.pdf"))
 }
 
+    # get log_prop and make a matrix in which rows are for each sample and column for each observation
+plot_histogram <- function(postfull, model_info, file) {
+
+    list_chains <- postfull$theta_list_chains
+    j <- 1
+
+    L <- nrow(list_chains[[1]])
+    B <- round(L / 2)
+    list_chains1 <- lapply(list_chains,
+        function(x) x[B:L, 
+            c(model_info$other$pars_plot, "total_infections", "lnlike", "prior_prob")])
+ #   for (t_par in model_info$others$pars_plot_trans) {
+ #       list_chains1 <- seq_len(length(list_chains1)) %>% map(~(list_chains1[[.x]] %>%
+  #          as.data.frame %>% mutate(!!t_par := logit(list_chains1[[.x]][, t_par], model_info$other$upper_boundary[j]))  %>% as.matrix))
+  #          j <- j + 1
+  #  }
+
+    p_theta_trace <- mcmc_dens_overlay(list_chains1)
+    savepath <- here::here("outputs", model_info$other$study$study_name_short, "fits", file, model_info$other$model_name)
+    dir.create(savepath)
+    ggsave(p_theta_trace, filename = paste0(savepath, "/", "histplot.pdf"))
+}
+
 plot_post_compare <- function(postfull, model_info, file) {
     df_s <- list()
     for (s in 2:9) {
         j <- 1
-        list_chains1 <- lapply(postfull[[s]]$theta_list_chains, function(x) x[, model_info[[s]]$other$pars_plot] %>% as.data.frame )
-        for (t_par in model_info[[s]]$others$pars_plot_trans) {
-            list_chains1 <- seq_len(length(list_chains1)) %>% map(~(list_chains1[[.x]] %>%
-                as.data.frame %>% mutate(!!t_par := logit(list_chains1[[.x]][, t_par], model_info[[s]]$other$upper_boundary[j]))))
-                j <- j + 1
-        }
-        df_s[[s]] <- list_chains1 %>% bind_rows %>% pivot_longer(everything(), names_to = "parameter", values_to = "value") %>%
+     #   for (t_par in model_info[[s]]$others$pars_plot_trans) {
+      #      list_chains1 <- seq_len(length(list_chains1)) %>% map(~(list_chains1[[.x]] %>%
+      #          as.data.frame %>% mutate(!!t_par := logit(list_chains1[[.x]][, t_par], model_info[[s]]$other$upper_boundary[j]))))
+      #          j <- j + 1
+       # }
+        df_s[[s]] <- postfull[[s]] %>% bind_rows %>% pivot_longer(everything(), names_to = "parameter", values_to = "value") %>%
             arrange(parameter) %>%
             mutate(model = model_info[[s]]$other$model_name)
     }
 
     df_s_final <- df_s %>% bind_rows
-    df_s_final_trim <- df_s_final[seq(1, nrow(df_s_final), 10), ]
+  #  df_s_final_trim <- df_s_final[seq(1, nrow(df_s_final), 10), ]
 
-    pars <- df_s_final_trim %>% pull(parameter) %>% unique
+    pars <- df_s_final %>% pull(parameter) %>% unique
     models <- c("vac_base", "vac_m", "vac_s", "vac_t", "vac_mt", "vac_ms", "vac_ts", "vac_mts")
 
-    df_s_final_trim <- df_s_final_trim %>% mutate(model = factor(model, levels = models))
+    df_s_final <- df_s_final %>% mutate(model = factor(model, levels = models))
 
     p1 <- list()
     legend_pos <- c(rep("right", 3), rep("none", 3))
@@ -63,7 +88,7 @@ plot_post_compare <- function(postfull, model_info, file) {
     positions <- list(1:8, 1:8, 1:8, c(2, 5, 6, 8), c(3, 6, 7, 8), c(4, 5, 7, 8))
     j <- 1
     for(par in pars) {
-        p1[[j]] <- df_s_final_trim %>%
+        p1[[j]] <- df_s_final %>%
             filter(parameter == par) %>%
             ggplot() +
                 geom_boxplot(aes(x = parameter, y = value, fill = model)) +
@@ -95,13 +120,12 @@ plot_ar <- function(postfull, model_info) {
 }
 
 calc_mpsrf <- function(postfull, model_info) {
-    list_chains <- postfull$theta_list_chains
-
-    list_chains1 <- lapply(list_chains, function(x) x[, model_info$other$pars_plot])
-
+    minlen <- (postfull %>% map(~nrow(.x))) %>% unlist %>% min
+    postfulltrim <- postfull %>% map(~.x[1:minlen, ])
+    postfullmcmc <- postfulltrim %>% map(~mcmc(.x))
     data.frame(
         model_name = model_info$other$model_name,
-        mpsrf = gelman.diag(list_chains1)$mpsrf
+        mpsrf = gelman.diag(postfullmcmc)$mpsrf
     )
 }
 
@@ -123,7 +147,7 @@ save_plot_mpsrf <- function(mpsrf_df, model_info, file) {
 }
 
 
-calc_waic <- function(postfull, model_info) {
+calc_waic <- function(postfull, samp_no_list, model_info) {
 
     cal_post <- create_posterior_func(par_tab = model_info$create_post$par_tab,
                                     vaccination_histories = model_info$create_post$vac_history,
@@ -131,7 +155,8 @@ calc_waic <- function(postfull, model_info) {
                                     antigenic_map = model_info$create_post$antigenic_map,
                                     version = model_info$create_post$prior_version)
 
-    pad_inf_chain_1 <- pad_inf_chain(postfull$inf_chain)
+    inf_chain_thin <- postfull$inf_chain %>% filter(sampno %in% samp_no_list[[1]])
+    pad_inf_chain_1 <- pad_inf_chain(inf_chain_thin)
     sample_nos <- pad_inf_chain_1 %>% pull(sampno) %>% unique
     NS <- length(sample_nos)
     N <- model_info$create_post$titre_data %>% pull(individual) %>% unique %>% length
@@ -139,9 +164,10 @@ calc_waic <- function(postfull, model_info) {
     log_lik_ind <- matrix(, ncol = N, nrow = NS)
     log_lik_ind_list <- rep(list(log_lik_ind), 3)
     pad_inf_chain_array <- split(pad_inf_chain_1, pad_inf_chain_1$sampno)
-    for (c in 1:3) { 
+    for (c in 1:4) { 
         for (s in 1:NS) {
-            theta_vals_post <- postfull$theta_chain[s, 3:(3 + Np)] %>% as.numeric
+            theta_chain_thin <- as.data.frame(postfull$theta_chain) %>% filter(sampno %in% samp_no_list[[1]])
+            theta_vals_post <- theta_chain_thin[s, 3:(3 + Np)] %>% as.numeric
 
             inf_chain_post <- pad_inf_chain_array[[s]] %>%
                 filter(chain_no == c) %>%
@@ -157,7 +183,7 @@ calc_waic <- function(postfull, model_info) {
 
     df_output <- data.frame()
     pWAIC_list <- list()
-    for (c in 1:3) {
+    for (c in 1:4) {
         log_lik_ind <- log_lik_ind_list[[c]]
         log_lik_ind_temp <- lapply(1:N, function(i) log_lik_ind[, i][log_lik_ind[, i] > -Inf])
         llpd <- sapply(1:N, function(i) log(sum(exp(log_lik_ind_temp[[i]]))) - log(NS))
@@ -175,7 +201,7 @@ save_plot_waic <- function(waics, file) {
     models <- c("vac_base", "vac_m", "vac_s", "vac_t", "vac_mt", "vac_ms", "vac_ts", "vac_mts")
     cols <- c("grey", "#1261A0", "#3895D3", "#58CCED", "#900D09", "#D21404", "#BC544B", "#4C9A2A")
 
-    save(waics, file = here::here("outputs", "serosolver", "hcw_pre", "data", "waics.RDS"))
+    save(waics, file =  here::here("outputs", "hcw_pre", "fits", file, "sum_figs", "waics.RDS"))
     df_overall <- seq_len(length(waics)) %>% map(~waics[[.x]]$df_output) %>% bind_rows %>%
         mutate(model = factor(model, levels = models))
     df_overall %>%
