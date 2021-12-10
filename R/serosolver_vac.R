@@ -37,13 +37,13 @@ setup_run_serosolver <- function(
       
     temp_ladder_len <- 10
     mcmc_sampling_pars <- list("iterations" = iterations,"popt "= 0.44,"popt_hist"=0.44,
-                          "opt_freq"=100, "thin"=100, "adaptive_period" = 10000,
-                          "save_block"=100, "thin_hist"=100, "hist_sample_prob" = 1,
-                          "switch_sample"=2, "burnin"= 100000, "inf_propn"=0.5,
+                          "opt_freq"=1000, "thin" = 1000, "adaptive_period" = iterations / 10,
+                          "save_block"=1000, "thin_hist" = 1000, "hist_sample_prob" = 1,
+                          "switch_sample"=2, "burnin"= iterations / 10, "inf_propn"=0.5,
                           "move_size"=3,"hist_opt"=1,"swap_propn"=0.5,
                           "hist_switch_prob"=0.5,"year_swap_propn" = 1,
                           "temperature" = seq(1, temp_ladder_len, by = 1),
-                          "parallel_tempering_iter" = 5, "min_temp_diff" = 1)
+                          "parallel_tempering_iter" = 5, "min_temp_diff" = 0.1)
 
                                     # function in post
     ## Not all random starting conditions return finite likelihood, so for each chain generate random

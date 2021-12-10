@@ -9,7 +9,7 @@ get_model_info_hcw_pre_cross <- function(study) {
             list("sigma1_vac",   0, 1, 0.1, 0, 1,  0.01, 0.1, 1),
             list("sigma2_vac",   0, 1, 0.1, 0, 1,  0.01, 0.1, 1)
             )
-
+    par_tab$steps <- par_tab$steps / 10
     model_novac <- make_model_info(
             study = study,
             par_tab = par_tab,

@@ -37,7 +37,7 @@ library(wesanderson)
 Currently using the serosolver 
 ```{r}
 
-install_github("https://github.com/dchodge/serosolver", ref = "custom_ab")
+#install_github("https://github.com/dchodge/serosolver", ref = "custom_ab")
 #install("/Users/davidhodgson/Documents/research/flu/serosolver_vac")
 install(here::here("rcppfunchcw"))
 
@@ -55,6 +55,16 @@ get_model_info_hcw_pre_full(hcwpre)
 
 # Fitting is done in a separate R script
 ```{r}
+
+all_models_hcw_pre_cross <- all_models_hcw_pre
+setup_run_serosolver(
+    all_models_hcw_pre_cross[[1]],
+    chains = 4,
+    iterations = 20000,
+    pt = TRUE,
+    filename = "dis_dep",
+    cross_sectional = TRUE,
+    continue_run = FALSE)
 
 load(file = here::here("data", paste0("modelinfo_cross_", hcwpre$study_name_short, ".RDS"))) #all_models_hcw_pre_cross
 1:9 %>% map(~setup_run_serosolver(
