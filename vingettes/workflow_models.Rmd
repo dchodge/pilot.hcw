@@ -155,8 +155,6 @@ for (p in 1:9) {
     all_post_test_cross_trim[[p]] <- 1:4 %>% map(~as.data.frame(trimmed_post_list[[.x]][!bool_vec_list[[.x]], ]))
 }
 
-pad_inf_chain(all_post_test_cross[[1]]$inf_chain)
-all_post_test_cross[[1]]$inf_chain %>% filter(sam)
 # Plots box plots of the 8 different models
 plot_post_compare(all_post_test_cross_trim, all_models_hcw_pre_cross, file = "dis_dep/cross_sec")
 

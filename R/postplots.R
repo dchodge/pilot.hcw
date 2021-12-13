@@ -213,8 +213,8 @@ save_plot_waic <- function(waics, file) {
                 position = position_dodge(width = 0.5), shape = 21, colour = "white", size = 3) +
             labs(x = "WAIC", y = "Chain number", fill = "Model", color = "Model", title = "WAIC scores across models") +
             theme(aspect.ratio = 0.5, legend.position = "top") +
-            scale_fill_manual(values = cols) + 
-            scale_color_manual(values = cols) + 
+            scale_fill_manual(values = cols) +
+            scale_color_manual(values = cols) +
             coord_cartesian(xlim = c(0, 100000))
 
     ggsave(filename = here::here("outputs", "hcw_pre", "fits", file, "sum_figs", "waics.pdf"))
