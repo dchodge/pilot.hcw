@@ -220,7 +220,7 @@ void ab_kin_vac(
   double tau = theta["tau"];
   double kappa = theta["kappa"];
   double mu_vac = theta["mu_vac"];
-  double tau_prev_vac = theta["tau_prev_vac"];
+  double tau_vac = theta["tau_vac"];
   double mu_short_vac = theta["mu_short_vac"];
   double wane_vac = theta["wane_vac"];
 
@@ -285,7 +285,12 @@ void ab_kin_vac(
         if(sampling_time > infection_times[x_inf]) {
             time = sampling_time - infection_times[x_inf]; // Time between sample and infection
             wane_amount = MAX(0, 1.0 - (wane*time)); // Basic waning function
-            seniority = MAX(0, 1.0 - tau*(n_inf + n_vac - 1.0)); // Antigenic seniority
+            
+            if (tau_vac ==  1) {
+              seniority = MAX(0, 1.0 - tau*(n_inf + n_vac - 1.0)); // Antigenic seniority
+            } else {
+              seniority = MAX(0, 1.0 - tau*(n_inf - 1.0)); // Antigenic seniority
+            }
             
             inf_map_index = infection_strain_indices_tmp[x_inf]; // Index of this infecting strain in antigenic map
             for(int k = 0; k < n_titres; ++k){
@@ -302,7 +307,12 @@ void ab_kin_vac(
           if(sampling_time > vaccination_times[x_vac]) {
             time = sampling_time - vaccination_times[x_vac]; // Time er vaccination
             wane_amount_vac = MAX(0, 1.0 - (wane_vac*time)); // Basic waning function
-            seniority = MAX(0, 1.0 - tau_prev_vac*(n_inf + n_vac - 1.0)); // Antigenic seniority
+
+            if (tau_vac ==  1) {
+              seniority = MAX(0, 1.0 - tau*(n_inf + n_vac - 1.0)); // Antigenic seniority
+            } else {
+              seniority = MAX(0, 1.0 - tau*(n_inf - 1.0)); // Antigenic seniority
+            }
             vac_map_index = vaccination_strain_indices_tmp[x_vac]; // Index of this vaccinating strain in antigenic map
 
             for(int k = 0; k < n_titres; ++k){

@@ -2,15 +2,20 @@ get_model_info_hcw_pre_full <- function(study) {
     antigenic_map <- get_antigenic_map()
     par_tab <- get_par_tab()
     par_tab_vac <-  rbind(par_tab,
-            list("mu_vac",       1, 0, 0.1, 0, 1,  0, 1, 1),
+            list("mu_vac",       0.04, 0, 0.1, 0, 1,  0, 1, 1),
             list("mu_short_vac", 0, 0, 0.1, 0, 1,  0, 1, 1),
             list("wane_vac",     0, 0, 0.1, 0, 0.1,    0.001,  0.01, 1),
             list("tau_prev_vac", 0, 1, 0.1,  0, 1,  0.01, 0.1, 1),
-            list("sigma1_vac",   0, 0, 0.1, 0, 1,  0.01, 0.1, 1),
+            list("sigma1_vac",   1, 1, 0.1, 0, 1,  0.01, 0.1, 1),
             list("sigma2_vac",   0, 0, 0.1, 0, 1,  0.01, 0.1, 1),
             list("rho_boost",   1, 1, 0.1, 0, 10,  0.5, 2, 1),
             list("rho_wane",   1, 1, 0.1, 0, 10,  0.5, 2, 1)
             )
+
+    par_tab_vac <- par_tab_vac %>%
+        mutate(value = replace(values, names == "mu", 2.125))
+        mutate(value = replace(values, names == "tau", 0.01))
+        mutate(value = replace(values, names == "sigma1", 0.079))
 
     model_vac_full <- make_model_info(
             study = study,
@@ -29,7 +34,7 @@ get_model_info_hcw_pre_full <- function(study) {
                 tau <- cur_pars[["tau"]]
                 sigma1 <- cur_pars[["sigma1"]]
                 log_p <- log(dtriangle(mu, 1.75, 2.50, 2.125))
-                log_p <- log_p + log(dtriangle(mu_vac, 0.2, 0.6, 0.4))
+                log_p <- log_p + log(dtriangle(mu_vac, 0.02, 0.06, 0.04))
                 log_p <- log_p + log(dtriangle(tau, 0.0, 0.04, 0.01))
                 log_p <- log_p + log(dtriangle(sigma1, 0.074, 0.084, 0.079))
                 return(log_p)

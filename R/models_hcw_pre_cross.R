@@ -5,8 +5,8 @@ get_model_info_hcw_pre_cross <- function(study) {
             list("mu_vac",       1, 1, 0.1, 0, 1,  0, 1, 1),
             list("mu_short_vac", 0, 1, 0.1, 0, 8,  1, 3, 1),
             list("wane_vac",     0, 1, 0.1, 0, 1,    0.01,  0.1, 1),
-            list("tau_prev_vac", 0, 1, 0.1,  0, 1,  0.01, 0.1, 1),
-            list("sigma1_vac",   0, 1, 0.1, 0, 1,  0.01, 0.1, 1),
+            list("tau_vac",      0, 1, 0.1,  0, 1,  0.01, 0.1, 0),
+            list("sigma1_vac",   1, 1, 0.1, 0, 1,  0.01, 0.1, 1),
             list("sigma2_vac",   0, 1, 0.1, 0, 1,  0.01, 0.1, 1)
             )
     par_tab$steps <- par_tab$steps / 10
@@ -59,7 +59,7 @@ get_model_info_hcw_pre_cross <- function(study) {
             )
 
     par_tab_vac_t <- par_tab_vac_ %>%
-        mutate(fixed = replace(fixed, names == "tau_prev_vac", 0))
+        mutate(values = replace(values, names == "tau_vac", 1))
     model_vac_t <- make_model_info(study = study,
             par_tab = par_tab_vac_t,
             antigenic_map = antigenic_map,
@@ -68,7 +68,7 @@ get_model_info_hcw_pre_cross <- function(study) {
             output_file = "hpc/outputs/",
             vacc_type = "vac",
             model_name = "vac_t",
-            pars_plot = c("mu", "sigma1", "tau", "tau_prev_vac"),
+            pars_plot = c("mu", "sigma1", "tau", "tau_vac"),
             prior_function = function(cur_pars) { return(0)},
             custom_ab_kin_func = ab_kin_vac,
             custom_antigenic_maps_func = make_antigenic_maps_vac1
@@ -93,7 +93,7 @@ get_model_info_hcw_pre_cross <- function(study) {
 
     par_tab_vac_mt <- par_tab_vac_ %>%
         mutate(fixed = replace(fixed, names == "mu_vac", 0)) %>%
-        mutate(fixed = replace(fixed, names == "tau_prev_vac", 0))
+        mutate(values = replace(values, names == "tau_vac", 1))
     model_vac_mt <- make_model_info(study = study,
             par_tab = par_tab_vac_mt,
             antigenic_map = antigenic_map,
@@ -102,7 +102,7 @@ get_model_info_hcw_pre_cross <- function(study) {
             output_file = "hpc/outputs/",
             vacc_type = "vac",
             model_name = "vac_mt",
-            pars_plot = c("mu", "sigma1", "tau", "mu_vac", "tau_prev_vac"),
+            pars_plot = c("mu", "sigma1", "tau", "mu_vac", "tau_vac"),
             prior_function = function(cur_pars) { return(0)},
             custom_ab_kin_func = ab_kin_vac,
             custom_antigenic_maps_func = make_antigenic_maps_vac1
@@ -126,7 +126,7 @@ get_model_info_hcw_pre_cross <- function(study) {
     )
 
     par_tab_vac_ts <- par_tab_vac_ %>%
-        mutate(fixed = replace(fixed, names == "tau_prev_vac", 0)) %>%
+        mutate(values = replace(values, names == "tau_vac", 1)) %>%
         mutate(fixed = replace(fixed, names == "sigma1_vac", 0))
     model_vac_ts <- make_model_info(study = study,
             par_tab = par_tab_vac_ts,
@@ -136,7 +136,7 @@ get_model_info_hcw_pre_cross <- function(study) {
             output_file = "hpc/outputs/",
             vacc_type = "vac",
             model_name = "vac_ts",
-            pars_plot = c("mu", "sigma1", "tau", "tau_prev_vac", "sigma1_vac"),
+            pars_plot = c("mu", "sigma1", "tau", "tav_vac", "sigma1_vac"),
             prior_function = function(cur_pars) { return(0)},
             custom_ab_kin_func = ab_kin_vac,
             custom_antigenic_maps_func = make_antigenic_maps_vac1
@@ -144,7 +144,7 @@ get_model_info_hcw_pre_cross <- function(study) {
 
 
     par_tab_vac_mts <- par_tab_vac_ %>%
-        mutate(fixed = replace(fixed, names == "tau_prev_vac", 0)) %>%
+        mutate(values = replace(values, names == "tau_vac", 1)) %>%
         mutate(fixed = replace(fixed, names == "sigma1_vac", 0)) %>% 
         mutate(fixed = replace(fixed, names == "mu_vac", 0))
     model_vac_mts <- make_model_info(study = study,
@@ -155,7 +155,7 @@ get_model_info_hcw_pre_cross <- function(study) {
             output_file = "hpc/outputs/",
             vacc_type = "vac",
             model_name = "vac_mts",
-            pars_plot = c("mu", "sigma1", "tau", "mu_vac", "tau_prev_vac", "sigma1_vac"),
+            pars_plot = c("mu", "sigma1", "tau", "mu_vac", "tau_vac", "sigma1_vac"),
             prior_function = function(cur_pars) { return(0)},
             custom_ab_kin_func = ab_kin_vac,
             custom_antigenic_maps_func = make_antigenic_maps_vac1
