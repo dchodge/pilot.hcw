@@ -21,8 +21,19 @@ get_model_info_hcw_pre_full <- function(study) {
             output_file = "hpc/outputs/",
             vacc_type = "vac",
             model_name = "base",
-            pars_plot = c("mu", "sigma1", "tau", "mu_vac", "sigma1_vac", "mu_short_vac", "wane_vac", "sigma2_vac"),
-            prior_function = function(cur_pars) { return(0)},
+            pars_plot = c("mu", "sigma1", "tau", "mu_vac", "mu_short_vac", "wane_vac", "sigma2_vac"),
+            prior_function = function(cur_pars) { 
+                require(triangle)
+                mu <- cur_pars[["mu"]]
+                mu_vac <- cur_pars[["mu_vac"]]
+                tau <- cur_pars[["tau"]]
+                sigma1 <- cur_pars[["sigma1"]]
+                log_p <- log(dtriangle(mu, 1.75, 2.50, 2.125))
+                log_p <- log_p + log(dtriangle(mu_vac, 0.2, 0.6, 0.4))
+                log_p <- log_p + log(dtriangle(tau, 0.0, 0.04, 0.01))
+                log_p <- log_p + log(dtriangle(sigma1, 0.074, 0.084, 0.079))
+                return(log_p)
+            },
             custom_ab_kin_func = ab_kin_vac_prev_hist,
             custom_antigenic_maps_func = make_antigenic_maps_vac1
     )
@@ -38,8 +49,19 @@ get_model_info_hcw_pre_full <- function(study) {
             output_file = "hpc/outputs/",
             vacc_type = "vac",
             model_name = "m1",
-            pars_plot = c("mu", "sigma1", "tau", "mu_vac", "sigma1_vac", "mu_short_vac", "wane_vac", "sigma2_vac", "rho_boost"),
-            prior_function = function(cur_pars) { return(0)},
+            pars_plot = c("mu", "sigma1", "tau", "mu_vac",  "mu_short_vac", "wane_vac", "sigma2_vac", "rho_boost"),
+            prior_function = function(cur_pars) { 
+                require(triangle)
+                mu <- cur_pars[["mu"]]
+                mu_vac <- cur_pars[["mu_vac"]]
+                tau <- cur_pars[["tau"]]
+                sigma1 <- cur_pars[["sigma1"]]
+                log_p <- log(dtriangle(mu, 1.75, 2.50, 2.125))
+                log_p <- log_p + log(dtriangle(mu_vac, 0.2, 0.6, 0.4))
+                log_p <- log_p + log(dtriangle(tau, 0.0, 0.04, 0.01))
+                log_p <- log_p + log(dtriangle(sigma1, 0.074, 0.084, 0.079))
+                return(log_p)
+            },
             custom_ab_kin_func = ab_kin_vac_prev_hist,
             custom_antigenic_maps_func = make_antigenic_maps_vac1
     )
@@ -54,8 +76,19 @@ get_model_info_hcw_pre_full <- function(study) {
             output_file = "hpc/outputs/",
             vacc_type = "vac",
             model_name = "m2",
-            pars_plot = c("mu", "sigma1", "tau", "mu_vac", "sigma1_vac", "mu_short_vac", "wane_vac", "sigma2_vac", "rho_wane"),
-            prior_function = function(cur_pars) { return(0)},
+            pars_plot = c("mu", "sigma1", "tau", "mu_vac", "mu_short_vac", "wane_vac", "sigma2_vac", "rho_wane"),
+            prior_function = function(cur_pars) { 
+                require(triangle)
+                mu <- cur_pars[["mu"]]
+                mu_vac <- cur_pars[["mu_vac"]]
+                tau <- cur_pars[["tau"]]
+                sigma1 <- cur_pars[["sigma1"]]
+                log_p <- log(dtriangle(mu, 1.75, 2.50, 2.125))
+                log_p <- log_p + log(dtriangle(mu_vac, 0.2, 0.6, 0.4))
+                log_p <- log_p + log(dtriangle(tau, 0.0, 0.04, 0.01))
+                log_p <- log_p + log(dtriangle(sigma1, 0.074, 0.084, 0.079))
+                return(log_p)
+            },
             custom_ab_kin_func = ab_kin_vac_prev_hist,
             custom_antigenic_maps_func = make_antigenic_maps_vac1
             )
@@ -72,7 +105,18 @@ get_model_info_hcw_pre_full <- function(study) {
             vacc_type = "vac",
             model_name = "m3",
             pars_plot = c("mu", "sigma1", "tau", "mu_vac", "sigma1_vac", "mu_short_vac", "wane_vac", "sigma2_vac", "rho_boost", "rho_wane"),
-            prior_function = function(cur_pars) { return(0)},
+            prior_function = function(cur_pars) { 
+                require(triangle)
+                mu <- cur_pars[["mu"]]
+                mu_vac <- cur_pars[["mu_vac"]]
+                tau <- cur_pars[["tau"]]
+                sigma1 <- cur_pars[["sigma1"]]
+                log_p <- log(dtriangle(mu, 1.75, 2.50, 2.125))
+                log_p <- log_p + log(dtriangle(mu_vac, 0.2, 0.6, 0.4))
+                log_p <- log_p + log(dtriangle(tau, 0.0, 0.04, 0.01))
+                log_p <- log_p + log(dtriangle(sigma1, 0.074, 0.084, 0.079))
+                return(log_p)
+            },
             custom_ab_kin_func = ab_kin_vac_prev_hist,
             custom_antigenic_maps_func = make_antigenic_maps_vac1
             )
