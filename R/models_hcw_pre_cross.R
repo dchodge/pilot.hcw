@@ -6,10 +6,11 @@ get_model_info_hcw_pre_cross <- function(study) {
             list("mu_short_vac", 0, 1, 0.1, 0, 8,  1, 3, 1),
             list("wane_vac",     0, 1, 0.1, 0, 1,    0.01,  0.1, 1),
             list("tau_vac",      0, 1, 0.1,  0, 1,  0.01, 0.1, 0),
-            list("sigma1_vac",   1, 1, 0.1, 0, 1,  0.01, 0.1, 1),
+            list("sigma1_vac",   1, 1, 0.1, 0.1, 10,  0.5, 2.0, 1),
             list("sigma2_vac",   0, 1, 0.1, 0, 1,  0.01, 0.1, 1)
             )
-    par_tab$steps <- par_tab$steps / 10
+        
+    par_tab_vac$steps <- par_tab_vac$steps / 10
     model_novac <- make_model_info(
             study = study,
             par_tab = par_tab,
@@ -136,7 +137,7 @@ get_model_info_hcw_pre_cross <- function(study) {
             output_file = "hpc/outputs/",
             vacc_type = "vac",
             model_name = "vac_ts",
-            pars_plot = c("mu", "sigma1", "tau", "tav_vac", "sigma1_vac"),
+            pars_plot = c("mu", "sigma1", "tau", "tau_vac", "sigma1_vac"),
             prior_function = function(cur_pars) { return(0)},
             custom_ab_kin_func = ab_kin_vac,
             custom_antigenic_maps_func = make_antigenic_maps_vac1
@@ -162,9 +163,9 @@ get_model_info_hcw_pre_cross <- function(study) {
     )
 
     all_models <- list(model_novac, model_vac_, model_vac_m, model_vac_s, model_vac_t, model_vac_ms, model_vac_mt, model_vac_ts, model_vac_mts)
-    all_models_hcw_pre <- all_models %>% map(~convert_to_resolution(.x, 12))
+    all_models_hcw_pre_cross <- all_models %>% map(~convert_to_resolution(.x, 12))
 
-    save(all_models_hcw_pre, file = here::here("data", paste0("modelinfo_cross_", study$study_name_short, ".RDS")))
+    save(all_models_hcw_pre_cross, file = here::here("data", paste0("modelinfo_cross_", study$study_name_short, ".RDS")))
 }
 
 logit <- function(x, b) {
