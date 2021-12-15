@@ -33,6 +33,8 @@ import_hcw_pre <- function() {
             sample_time == "titre_post_vac_1"~30,
             sample_time == "titre_post_vac_2"~180))
 
+    hcw_pre_sero_data <- hcw_pre_sero_data %>% filter(pid != "RMH0096") # Remove this person as they have loads of missing data and it effects the WAIC
+
     save(hcw_pre_sero_data, file = here::here("data", "hcw_pre", "sero_data.RDS"))
 }
 

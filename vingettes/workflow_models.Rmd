@@ -37,6 +37,7 @@ library(wesanderson)
 Currently using the serosolver 
 ```{r}
 
+
 #install_github("https://github.com/dchodge/serosolver", ref = "custom_ab")
 #install("/Users/davidhodgson/Documents/research/flu/serosolver_vac")
 #install(here::here("rcppfunchcw"))
@@ -97,7 +98,6 @@ load(file = here::here("data", paste0("modelinfo_full_", hcwpre$study_name_short
 ```{r}
 
 load(file = here::here("data", paste0("modelinfo_cross_", hcwpre$study_name_short, ".RDS"))) #all_models_hcw_pre_cross
-all_models_hcw_pre_cross <- all_models_hcw_pre
 all_post_test_cross <- all_models_hcw_pre_cross %>%
     map(~load_mcmc_post(.x,
         fit_place = "local",
@@ -165,10 +165,7 @@ plot_post_compare(all_post_test_cross_trim, all_models_hcw_pre_cross, file = "di
 mpsrf_df <- purrr::map2(all_post_test_cross_trim[2:9], all_models_hcw_pre_cross[2:9], ~calc_mpsrf(.x, .y)) %>% bind_rows
 save_plot_mpsrf(mpsrf_df, all_models_hcw_pre_cross[[1]], file = "dis_dep/cross_sec")
 
-# Plots the waics for the models and compare, TAKES AGES
-
-waics <- purrr::pmap(list(all_post_test_cross, samp_no_list, all_models_hcw_pre_cross), ~calc_waic(..1, ..2, ..3))
-save_plot_waic(waics[2:9], file = "dis_dep/cross_sec")
-
+# Plots the waics for the models and compare
+save_plot_waic(file = "dis_dep")
 
 ```

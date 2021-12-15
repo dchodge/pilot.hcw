@@ -197,29 +197,6 @@ calc_waic <- function(postfull, samp_no_list, model_info) {
     list(df_output = df_output, pWAIC_list = pWAIC_list)
 }
 
-save_plot_waic <- function(waics, file) {
-    models <- c("vac_base", "vac_m", "vac_s", "vac_t", "vac_mt", "vac_ms", "vac_ts", "vac_mts")
-    cols <- c("grey", "#1261A0", "#3895D3", "#58CCED", "#900D09", "#D21404", "#BC544B", "#4C9A2A")
-
-    save(waics, file =  here::here("outputs", "hcw_pre", "fits", file, "sum_figs", "waics.RDS"))
-    df_overall <- seq_len(length(waics)) %>% map(~waics[[.x]]$df_output) %>% bind_rows %>%
-        mutate(model = factor(model, levels = models))
-    df_overall %>%
-        mutate(lb = WAIC - 2 * WAICse, ub = WAIC + 2 * WAICse) %>%
-        ggplot() +
-            geom_linerange(aes(xmin = lb, xmax = ub, color = model, y = model, group = as.character(chain)),
-                position = position_dodge(width = 0.5)) +
-            geom_point(aes(x = WAIC, fill = model, y = model, group = as.character(chain)),
-                position = position_dodge(width = 0.5), shape = 21, colour = "white", size = 3) +
-            labs(x = "WAIC", y = "Chain number", fill = "Model", color = "Model", title = "WAIC scores across models") +
-            theme(aspect.ratio = 0.5, legend.position = "top") +
-            scale_fill_manual(values = cols) +
-            scale_color_manual(values = cols) +
-            coord_cartesian(xlim = c(0, 100000))
-
-    ggsave(filename = here::here("outputs", "hcw_pre", "fits", file, "sum_figs", "waics.pdf"))
-
-}
 
 plot_titre_post <- function(postfull, model_info, file) {
 

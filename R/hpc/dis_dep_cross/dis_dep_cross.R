@@ -22,7 +22,7 @@ load(here::here("data", "hcwpre_data.RDS")) # hcwpre
 load(file = here::here("data", paste0("modelinfo_cross_", hcwpre$study_name_short, ".RDS"))) # all_models_hcw_pre
 
 setup_run_serosolver(
-        all_models_hcw_pre[[taskIdInteger]],
+        all_models_hcw_pre_cross[[taskIdInteger]],
         chains = 4,
         iterations = 1000000,
         pt = TRUE,
