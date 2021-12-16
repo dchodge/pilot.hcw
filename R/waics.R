@@ -19,16 +19,16 @@ load_point_ll <- function(model_info, folder_name_1, cross_sec = TRUE, burnin = 
     } else {
         B <- 1
     }
-    read_chains_trim <- lapply(read_chains, function(x) x[B:L, 2:50])
+    read_chains_trim <- lapply(read_chains, function(x) x[B:L, ])
     ll_point_mat <- read_chains_trim %>% bind_rows %>% as.matrix
     ll_point_mat
 }
 
-save_plot_waic <- function(file.path = "dis_dep", cross_sec = TRUE) {
+save_plot_waic <- function(all_models_hcw_pre_cross, file.path = "dis_dep", cross_sec = TRUE) {
     waics <- vector(mode = "list", length = length(all_models_hcw_pre_cross))
     for (i in 1:length(all_models_hcw_pre_cross)) {
         model_info <- all_models_hcw_pre_cross[[i]]
-        ll_point_mat <- load_point_ll(model_info, file.path, cross_sec = TRUE, burnin = TRUE)
+        ll_point_mat <- load_point_ll(model_info, file.path, cross_sec, burnin = TRUE)
         waics[[i]] <- waic(ll_point_mat)
     }
 

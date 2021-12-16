@@ -71,6 +71,7 @@ setup_run_serosolver(
 1:9 %>% map(~setup_run_serosolver(
     all_models_hcw_pre_cross[[.x]],
     chains = 4,
+    iterations = 1000000,
     pt = TRUE,
     filename = "dis_dep",
     cross_sectional = TRUE,
@@ -86,6 +87,7 @@ load(file = here::here("data", paste0("modelinfo_full_", hcwpre$study_name_short
 1:4 %>% map(~setup_run_serosolver(
     all_models_hcw_pre_full[[.x]],
     chains = 4,
+    iterations = 1000000,
     pt = TRUE,
     filename = "dis_dep",
     cross_sectional = FALSE,
@@ -166,6 +168,17 @@ mpsrf_df <- purrr::map2(all_post_test_cross_trim[2:9], all_models_hcw_pre_cross[
 save_plot_mpsrf(mpsrf_df, all_models_hcw_pre_cross[[1]], file = "dis_dep/cross_sec")
 
 # Plots the waics for the models and compare
-save_plot_waic(file = "dis_dep")
+save_plot_waic(all_models_hcw_pre_cross, file = "dis_dep")
+
+```
+
+# Get the priors for the full version
+
+```{r}
+
+# Best fit model is mt according to waic
+post_best <- all_post_test_cross_trim[[6]] %>% bind_rows
+post_best %>% apply(2, mean) %>% as.data.frame %>% t
+post_best %>% apply(2, quantile, c(0.01, 0.99)) %>% as.data.frame
 
 ```
