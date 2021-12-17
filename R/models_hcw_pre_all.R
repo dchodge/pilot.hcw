@@ -36,6 +36,13 @@ get_model_info_hcw_pre_full <- function(study) {
         mutate(steps = replace(steps, names == "sigma1", 0.01)) %>%
         mutate(steps = replace(steps, names == "mu_vac", 0.01)) %>%
         mutate(steps = replace(steps, names == "sigma1_vac", 0.01))
+    par_tab_vac <- par_tab_vac %>% # mu, tau, sigma1 also done
+        mutate(fixed = replace(fixed, names == "mu_vac", 0)) %>%
+        mutate(fixed = replace(fixed, names == "sigma1_vac", 0)) %>%
+        mutate(fixed = replace(fixed, names == "mu_short_vac", 0)) %>%
+        mutate(fixed = replace(fixed, names == "wane_vac", 0)) %>%
+        mutate(fixed = replace(fixed, names == "sigma2_vac", 0))
+
     par_tab_vac$steps <- par_tab_vac$steps / 10
 
     model_vac_full <- make_model_info(
@@ -136,7 +143,7 @@ get_model_info_hcw_pre_full <- function(study) {
             output_file = "hpc/outputs/",
             vacc_type = "vac",
             model_name = "m3",
-            pars_plot = c("mu", "sigma1", "tau", "mu_vac", "sigma1_vac", "sigma1_vac", "mu_short_vac", "wane_vac", "sigma2_vac", "rho_boost", "rho_wane"),
+            pars_plot = c("mu", "sigma1", "tau", "mu_vac", "sigma1_vac", "mu_short_vac", "wane_vac", "sigma2_vac", "rho_boost", "rho_wane"),
             prior_function = function(cur_pars) { 
                 require(triangle)
                 mu <- cur_pars[["mu"]]

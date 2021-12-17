@@ -9,6 +9,7 @@ require(plyr)
 require(data.table)
 require(tidyverse)
 library(devtools)
+library(loo)
 # Required for this analysis
 require(reshape2)
 require(foreach)
@@ -116,22 +117,6 @@ purrr::map2(all_post_test_cross, all_models_hcw_pre_cross, ~plot_titre_post(.x, 
 
 ```{r}
 
-load(file = here::here("data", paste0("modelinfo_full_", hcwpre$study_name_short, ".RDS"))) #all_models_hcw_pre_full
-all_post_test_full <- all_models_hcw_pre_full %>%
-    map(~load_mcmc_post(.x,
-        fit_place = "local",
-        folder_name_1 = "dis_dep",
-        cross_sectional = FALSE,
-        burnin = 0,
-        thin = 1))
-
-purrr::map2(all_post_test_full, all_models_hcw_pre_full, ~plot_traces(.x, .y, file = "dis_dep/full"))
-purrr::map2(all_post_test_full, all_models_hcw_pre_full, ~plot_titre_post(.x, .y, file = "dis_dep/full"))
-
-```
-
-```{r}
-
 average <- all_post_test[[2]]$theta_chain[2200:4404, c("mu", "mu_vac", "mu_short_vac", "wane_vac")] %>% apply(2, mean)
 c(average[["mu"]] * average[["mu_vac"]], average[["mu"]] * average[["mu_vac"]] + (average[["mu_short_vac"]] - ((1:11) * average[["wane_vac"]])))
 
@@ -141,6 +126,7 @@ c(average[["mu"]] * average[["mu_vac"]], average[["mu"]] * average[["mu_vac"]] +
 # Comparison figures and statistics in sum_figs folder
 
 ```{r}
+require(loo)
 
 # Trim the the data, use last 50% and throw out outliers 
 all_post_test_cross_trim <- vector(mode = "list", length = 9)
@@ -180,5 +166,39 @@ save_plot_waic(all_models_hcw_pre_cross, file = "dis_dep")
 post_best <- all_post_test_cross_trim[[6]] %>% bind_rows
 post_best %>% apply(2, mean) %>% as.data.frame %>% t
 post_best %>% apply(2, quantile, c(0.01, 0.99)) %>% as.data.frame
+
+```
+
+
+
+## Full data 
+
+
+
+```{r}
+
+load(file = here::here("data", paste0("modelinfo_full_", hcwpre$study_name_short, ".RDS"))) #all_models_hcw_pre_full
+all_post_test_full <- all_models_hcw_pre_full %>%
+    map(~load_mcmc_post(.x,
+        fit_place = "local",
+        folder_name_1 = "dis_dep",
+        cross_sectional = FALSE,
+        burnin = 0,
+        thin = 1))
+
+plot_traces(all_post_test_full[[4]], all_models_hcw_pre_full[[4]],  file = "dis_dep/full")
+
+list_chains <- all_post_test_full[[4]]$theta_list_chains
+j <- 1
+L <- nrow(list_chains[[4]])
+B <- round(L / 2)
+list_chains1 <- lapply(list_chains, 
+    function(x) x[B:L, 
+        c(all_models_hcw_pre_full[[4]]$other$pars_plot, "total_infections", "lnlike", "prior_prob")])
+p_theta_trace <- mcmc_trace(list_chains1)
+
+purrr::map2(all_post_test_full, all_models_hcw_pre_full, ~plot_traces(.x, .y, file = "dis_dep/full"))
+purrr::map2(all_post_test_full, all_models_hcw_pre_full, ~plot_titre_post(.x, .y, file = "dis_dep/full"))
+purrr::map2(all_post_test_full, all_models_hcw_pre_full, ~plot_histogram(.x, .y, file = "dis_dep/cross_sec"))
 
 ```
