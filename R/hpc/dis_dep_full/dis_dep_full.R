@@ -23,7 +23,7 @@ load(file = here::here("data", paste0("modelinfo_full_", hcwpre$study_name_short
 setup_run_serosolver(
         all_models_hcw_pre_full[[taskIdInteger]],
         chains = 4,
-        iterations = 1000000,
+        iterations = 2000000,
         pt = TRUE,
         filename = "dis_dep",
         cross_sectional = FALSE,

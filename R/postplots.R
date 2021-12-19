@@ -60,7 +60,7 @@ plot_histogram <- function(postfull, model_info, file) {
     ggsave(p_theta_trace, filename = paste0(savepath, "/", "histplot.pdf"))
 }
 
-plot_post_compare <- function(postfull, model_info, file) {
+plot_post_compare_cross <- function(postfull, model_info, file) {
     df_s <- list()
     for (s in 2:9) {
         j <- 1
@@ -86,6 +86,52 @@ plot_post_compare <- function(postfull, model_info, file) {
     legend_pos <- c(rep("right", 3), rep("none", 3))
     cols <- c("grey", "#1261A0", "#3895D3", "#58CCED", "#900D09", "#D21404", "#BC544B", "#4C9A2A")
     positions <- list(1:8, 1:8, 1:8, c(2, 5, 6, 8), c(3, 6, 7, 8), c(4, 5, 7, 8))
+    j <- 1
+    for(par in pars) {
+        p1[[j]] <- df_s_final %>%
+            filter(parameter == par) %>%
+            ggplot() +
+                geom_boxplot(aes(x = parameter, y = value, fill = model)) +
+                theme(axis.title.x = element_blank(), axis.title.y = element_blank()) + 
+                theme(legend.position = legend_pos[j]) +
+                scale_fill_manual(values = cols[positions[[j]]])
+        j <- j + 1
+    }
+    wrap_plots(p1) + plot_annotation(tag_levels = c("A")) + plot_layout(guides = "collect")
+
+    savepath <- here::here("outputs", model_info[[1]]$other$study$study_name_short, "fits", file, "sum_figs")
+    ggsave(file = paste0(savepath, "/", "posteriors", ".pdf"))
+}
+
+postfull <- all_post_test_full_trim
+model_info <- all_models_hcw_pre_full
+
+plot_post_compare_full <- function(postfull, model_info, file) {
+    df_s <- list()
+    for (s in 1:4) {
+      #  j <- 1
+     #   for (t_par in model_info[[s]]$others$pars_plot_trans) {
+      #      list_chains1 <- seq_len(length(list_chains1)) %>% map(~(list_chains1[[.x]] %>%
+      #          as.data.frame %>% mutate(!!t_par := logit(list_chains1[[.x]][, t_par], model_info[[s]]$other$upper_boundary[j]))))
+      #          j <- j + 1
+       # }
+        df_s[[s]] <- postfull[[s]] %>% bind_rows %>% pivot_longer(everything(), names_to = "parameter", values_to = "value") %>%
+            arrange(parameter) %>%
+            mutate(model = model_info[[s]]$other$model_name)
+    }
+
+    df_s_final <- df_s %>% bind_rows
+  #  df_s_final_trim <- df_s_final[seq(1, nrow(df_s_final), 10), ]
+
+    pars <- df_s_final %>% pull(parameter) %>% unique
+    models <- c("base", "m1", "m2", "m3")
+
+    df_s_final <- df_s_final %>% mutate(model = factor(model, levels = models))
+
+    p1 <- list()
+    legend_pos <- c(rep("right", 5), rep("none", 5))
+    cols <- c("grey", "#1261A0", "#3895D3", "#58CCED")
+    positions <- list(1:4, 1:4, 1:4, 1:4, 1:4, 1:4, 1:4, 1:4, c(2,4), c(3,4))
     j <- 1
     for(par in pars) {
         p1[[j]] <- df_s_final %>%
@@ -129,7 +175,24 @@ calc_mpsrf <- function(postfull, model_info) {
     )
 }
 
-save_plot_mpsrf <- function(mpsrf_df, model_info, file) {
+save_plot_mpsrf_full <- function(mpsrf_df, model_info, file) {
+    save(mpsrf_df, file = here::here("outputs", model_info$other$study$study_name_short, "fits", file, "sum_figs", "mpsrf.RDS"))
+    models <- c("base", "m1", "m2", "m3")
+    cols <- c("grey", "#1261A0", "#3895D3", "#58CCED")
+    mpsrf_df %>%
+        mutate(model_name = factor(model_name, levels = models)) %>%
+        ggplot() +
+            geom_col(aes(x = mpsrf, y = model_name, fill = model_name)) +
+            scale_fill_manual(values = cols) +
+            theme_minimal() + theme(legend.position = "none", axis.title.y = element_blank()) +
+            labs(x = "MPSRF") +
+            geom_vline(xintercept = 1.1)
+
+    ggsave(filename = here::here("outputs", model_info$other$study$study_name_short, "fits", file, "sum_figs", "mpsrf.pdf"))
+
+}
+
+save_plot_mpsrf_cross <- function(mpsrf_df, model_info, file) {
     save(mpsrf_df, file = here::here("outputs", model_info$other$study$study_name_short, "fits", file, "sum_figs", "mpsrf.RDS"))
     models <- c("vac_base", "vac_m", "vac_s", "vac_t", "vac_mt", "vac_ms", "vac_ts", "vac_mts")
     cols <- c("grey", "#1261A0", "#3895D3", "#58CCED", "#900D09", "#D21404", "#BC544B", "#4C9A2A")

@@ -147,14 +147,14 @@ for (p in 1:9) {
 }
 
 # Plots box plots of the 8 different models
-plot_post_compare(all_post_test_cross_trim, all_models_hcw_pre_cross, file = "dis_dep/cross_sec")
+plot_post_compare_cross(all_post_test_cross_trim, all_models_hcw_pre_cross, file = "dis_dep/cross_sec")
 
 # Plots the mpsrf for the models to check convergences
 mpsrf_df <- purrr::map2(all_post_test_cross_trim[2:9], all_models_hcw_pre_cross[2:9], ~calc_mpsrf(.x, .y)) %>% bind_rows
-save_plot_mpsrf(mpsrf_df, all_models_hcw_pre_cross[[1]], file = "dis_dep/cross_sec")
+save_plot_mpsrf_cross(mpsrf_df, all_models_hcw_pre_cross[[1]], file = "dis_dep/cross_sec")
 
 # Plots the waics for the models and compare
-save_plot_waic(all_models_hcw_pre_cross, file = "dis_dep")
+save_plot_waic_cross(all_models_hcw_pre_cross, file = "dis_dep")
 
 ```
 
@@ -199,6 +199,40 @@ p_theta_trace <- mcmc_trace(list_chains1)
 
 purrr::map2(all_post_test_full, all_models_hcw_pre_full, ~plot_traces(.x, .y, file = "dis_dep/full"))
 purrr::map2(all_post_test_full, all_models_hcw_pre_full, ~plot_titre_post(.x, .y, file = "dis_dep/full"))
-purrr::map2(all_post_test_full, all_models_hcw_pre_full, ~plot_histogram(.x, .y, file = "dis_dep/cross_sec"))
+purrr::map2(all_post_test_full, all_models_hcw_pre_full, ~plot_histogram(.x, .y, file = "dis_dep/full"))
+
+```
+
+
+```{r}
+
+# Trim the the data, use last 50% and throw out outliers 
+all_post_test_full_trim <- vector(mode = "list", length = 4)
+samp_no_list <- vector(mode = "list", length = 4)
+for (p in 1:4) { 
+    L <- nrow(all_post_test_full[[p]]$theta_list_chain[[1]])
+    B <- round(L / 2)
+    chain_list <- all_post_test_full[[p]]$theta_list_chain
+    pars_plot <- setdiff(all_models_hcw_pre_full[[p]]$other$pars_plot, "tau_vac" )
+    all_post_test_full_trim[[p]] <- chain_list %>% map(~(.x[B:L, pars_plot] %>% as.data.frame))
+    samp_no_list[[p]] <- chain_list %>% map(~.x[B:L, c("sampno")])
+
+    #trimmed_post_list <- chain_list %>% map(~.x[B:L, all_models_hcw_pre_cross[[p]]$other$pars_plot])
+
+   # bool_vec_list <- trimmed_post_list %>% map(~aq.plot(.x,
+    #        delta = qchisq(0.975, df = ncol(trimmed_post_list[[1]])), quan = 1, alpha = 0.01)[[1]])
+   # all_post_test_cross_trim[[p]] <- 1:4 %>% map(~as.data.frame(trimmed_post_list[[.x]][!bool_vec_list[[.x]], ]))
+}
+
+
+# Plots box plots of the 8 different models
+plot_post_compare_full(all_post_test_full_trim, all_models_hcw_pre_full, file = "dis_dep/full")
+
+# Plots the mpsrf for the models to check convergences
+mpsrf_df <- purrr::map2(all_post_test_full_trim, all_models_hcw_pre_full, ~calc_mpsrf(.x, .y)) %>% bind_rows
+save_plot_mpsrf_full(mpsrf_df, all_models_hcw_pre_full[[1]], file = "dis_dep/full")
+
+# Plots the waics for the models and compare
+save_plot_waic_full(all_models_hcw_pre_full, file = "dis_dep", cross_sec = FALSE)
 
 ```
