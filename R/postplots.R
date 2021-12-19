@@ -103,9 +103,6 @@ plot_post_compare_cross <- function(postfull, model_info, file) {
     ggsave(file = paste0(savepath, "/", "posteriors", ".pdf"))
 }
 
-postfull <- all_post_test_full_trim
-model_info <- all_models_hcw_pre_full
-
 plot_post_compare_full <- function(postfull, model_info, file) {
     df_s <- list()
     for (s in 1:4) {
