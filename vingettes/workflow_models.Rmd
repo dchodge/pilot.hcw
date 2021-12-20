@@ -115,13 +115,6 @@ purrr::map2(all_post_test_cross, all_models_hcw_pre_cross, ~plot_titre_post(.x, 
 
 ```
 
-```{r}
-
-average <- all_post_test[[2]]$theta_chain[2200:4404, c("mu", "mu_vac", "mu_short_vac", "wane_vac")] %>% apply(2, mean)
-c(average[["mu"]] * average[["mu_vac"]], average[["mu"]] * average[["mu_vac"]] + (average[["mu_short_vac"]] - ((1:11) * average[["wane_vac"]])))
-
-
-```
 
 # Comparison figures and statistics in sum_figs folder
 
@@ -234,5 +227,30 @@ save_plot_mpsrf_full(mpsrf_df, all_models_hcw_pre_full[[1]], file = "dis_dep/ful
 
 # Plots the waics for the models and compare
 save_plot_waic_full(all_models_hcw_pre_full, file = "dis_dep", cross_sec = FALSE)
+
+```
+
+
+
+```{r}
+# + mean(postplots_long[["wane_vac"]]
+postplots_long[["mu_short_vac"]] * (1.0 - ((1 / 12 + mean(postplots_long[["wane_vac"]])) * 12 * 1))
+
+postplots_long <- all_post_test_full_trim[[1]] %>% bind_rows
+dec <- 1:12 %>% map(~
+    postplots_long[["mu"]] * postplots_long[["mu_vac"]] + (postplots_long[["mu_short_vac"]] * (1.0 - (((postplots_long[["mu_short_vac"]] * 1) / 12 + postplots_long[["wane_vac"]]) * .x * 1)))
+) 
+
+df_dec <- dec %>% setNames(as.character(c(1:12))) %>%
+    as.data.frame %>% pivot_longer(c(1:12), values_to = "titre", names_to = "time") %>%
+    mutate(time = str_extract(time, "[0-9,.]+")) %>%
+    mutate(time = factor(time, levels = as.character(c(1:12))))
+df_dec <- df_dec[df_dec$titre > 0, ]
+
+df_dec %>% 
+    ggplot() + 
+        geom_boxplot(aes(x = time, y = titre)) + 
+        labs(x = "Months post vaccination") + 
+        geom_hline(yintercept = postplots_long[["mu"]] * postplots_long[["mu_vac"]]  %>% mean)
 
 ```
