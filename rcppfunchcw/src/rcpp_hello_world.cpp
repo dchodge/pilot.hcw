@@ -488,7 +488,8 @@ void ab_kin_vac_prev_hist(
       if (indicatior_vac[x] & (vac_flag)) {
           ++n_vac;
           if(sampling_time > vaccination_times[x_vac]) {
-
+            rho_boost_par = 1;
+            rho_wane_par = 1;
             if (x_vac >= 1) {
               if (vaccination_times[x_vac - 1] == 24180) {
                 rho_boost_par = rho_boost;
@@ -496,7 +497,7 @@ void ab_kin_vac_prev_hist(
               }
             }
 
-            time = sampling_time - vaccination_times[x_vac] - 1; // Time er vaccination
+            time = sampling_time - vaccination_times[x_vac] - 1; // Timr vaccination
             wane_amount_vac = MAX(0, 1.0 - (((rho_wane_par) / 12 + wane_vac)*time*rho_wane_par)); // Basic waning function
             if (tau_vac ==  1) {
               seniority = MAX(0, 1.0 - tau*(n_inf + n_vac - 1.0)); // Antigenic seniority

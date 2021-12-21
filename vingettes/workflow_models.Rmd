@@ -166,8 +166,6 @@ post_best %>% apply(2, quantile, c(0.01, 0.99)) %>% as.data.frame
 
 ## Full data 
 
-
-
 ```{r}
 
 load(file = here::here("data", paste0("modelinfo_full_", hcwpre$study_name_short, ".RDS"))) #all_models_hcw_pre_full
@@ -178,17 +176,6 @@ all_post_test_full <- all_models_hcw_pre_full %>%
         cross_sectional = FALSE,
         burnin = 0,
         thin = 1))
-
-plot_traces(all_post_test_full[[4]], all_models_hcw_pre_full[[4]],  file = "dis_dep/full")
-
-list_chains <- all_post_test_full[[4]]$theta_list_chains
-j <- 1
-L <- nrow(list_chains[[4]])
-B <- round(L / 2)
-list_chains1 <- lapply(list_chains, 
-    function(x) x[B:L, 
-        c(all_models_hcw_pre_full[[4]]$other$pars_plot, "total_infections", "lnlike", "prior_prob")])
-p_theta_trace <- mcmc_trace(list_chains1)
 
 purrr::map2(all_post_test_full, all_models_hcw_pre_full, ~plot_traces(.x, .y, file = "dis_dep/full"))
 purrr::map2(all_post_test_full, all_models_hcw_pre_full, ~plot_titre_post(.x, .y, file = "dis_dep/full"))
@@ -233,12 +220,10 @@ save_plot_waic_full(all_models_hcw_pre_full, file = "dis_dep", cross_sec = FALSE
 
 
 ```{r}
-# + mean(postplots_long[["wane_vac"]]
-postplots_long[["mu_short_vac"]] * (1.0 - ((1 / 12 + mean(postplots_long[["wane_vac"]])) * 12 * 1))
 
 postplots_long <- all_post_test_full_trim[[1]] %>% bind_rows
 dec <- 1:12 %>% map(~
-    postplots_long[["mu"]] * postplots_long[["mu_vac"]] + (postplots_long[["mu_short_vac"]] * (1.0 - (((postplots_long[["mu_short_vac"]] * 1) / 12 + postplots_long[["wane_vac"]]) * .x * 1)))
+    postplots_long[["mu"]] * postplots_long[["mu_vac"]] + (postplots_long[["mu_short_vac"]] * (1.0 - ((1 / 12 + postplots_long[["wane_vac"]]) * .x )))
 ) 
 
 df_dec <- dec %>% setNames(as.character(c(1:12))) %>%
@@ -249,8 +234,8 @@ df_dec <- df_dec[df_dec$titre > 0, ]
 
 df_dec %>% 
     ggplot() + 
-        geom_boxplot(aes(x = time, y = titre)) + 
-        labs(x = "Months post vaccination") + 
+        geom_boxplot(aes(x = time, y = titre)) +
+        labs(x = "Months post vaccination") +
         geom_hline(yintercept = postplots_long[["mu"]] * postplots_long[["mu_vac"]]  %>% mean)
 
 ```
