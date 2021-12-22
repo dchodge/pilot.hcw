@@ -36,7 +36,11 @@ get_model_info_hcw_pre_full <- function(study) {
         mutate(steps = replace(steps, names == "sigma1", 0.01)) %>%
         mutate(steps = replace(steps, names == "mu_vac", 0.01)) %>%
         mutate(steps = replace(steps, names == "sigma1_vac", 0.01))
+
     par_tab_vac <- par_tab_vac %>% # mu, tau, sigma1 also done
+        mutate(fixed = replace(fixed, names == "mu", 1)) %>%
+        mutate(fixed = replace(fixed, names == "tau", 1)) %>%
+        mutate(fixed = replace(fixed, names == "sigma1", 1)) %>%
         mutate(fixed = replace(fixed, names == "mu_vac", 0)) %>%
         mutate(fixed = replace(fixed, names == "sigma1_vac", 0)) %>%
         mutate(fixed = replace(fixed, names == "mu_short_vac", 0)) %>%
@@ -57,14 +61,15 @@ get_model_info_hcw_pre_full <- function(study) {
             pars_plot = c("mu", "sigma1", "tau", "mu_vac", "sigma1_vac", "mu_short_vac", "wane_vac", "sigma2_vac"),
             prior_function = function(cur_pars) { 
                 require(triangle)
-                mu <- cur_pars[["mu"]]
-                tau <- cur_pars[["tau"]]
-                sigma1 <- cur_pars[["sigma1"]]
+                log_p <- 0
+             #   mu <- cur_pars[["mu"]]
+             #   tau <- cur_pars[["tau"]]
+            #    sigma1 <- cur_pars[["sigma1"]]
                 mu_vac <- cur_pars[["mu_vac"]]
                 sigma1_vac <- cur_pars[["sigma1_vac"]]
-                log_p <- log(dtriangle(mu, 1.74924, 2.38565, 2.117))
-                log_p <- log_p + log(dtriangle(tau, 0.0002898975, 0.0452621609, 0.01650))
-                log_p <- log_p + log(dtriangle(sigma1, 0.07448498, 0.08281997, 0.07871))
+            #    log_p <- log_p + log(dtriangle(mu, 1.74924, 2.38565, 2.117))
+            #    log_p <- log_p + log(dtriangle(tau, 0.0002898975, 0.0452621609, 0.01650))
+            #    log_p <- log_p + log(dtriangle(sigma1, 0.07448498, 0.08281997, 0.07871))
                 log_p <- log_p + log(dtriangle(mu_vac, 0.04056842, 0.11162242, 0.06686))
                 log_p <- log_p + log(dtriangle(sigma1_vac, 0.1067942, 0.8342593, 0.31019))
                 return(log_p)
@@ -87,16 +92,17 @@ get_model_info_hcw_pre_full <- function(study) {
             pars_plot = c("mu", "sigma1", "tau", "mu_vac", "sigma1_vac",  "mu_short_vac", "wane_vac", "sigma2_vac", "rho_boost"),
             prior_function = function(cur_pars) { 
                 require(triangle)
-                mu <- cur_pars[["mu"]]
+                log_p <- 0
+             #   mu <- cur_pars[["mu"]]
+             #   tau <- cur_pars[["tau"]]
+            #    sigma1 <- cur_pars[["sigma1"]]
                 mu_vac <- cur_pars[["mu_vac"]]
-                tau <- cur_pars[["tau"]]
-                sigma1 <- cur_pars[["sigma1"]]
                 sigma1_vac <- cur_pars[["sigma1_vac"]]
-                log_p <- log(dtriangle(mu, 1.74924, 2.38565, 2.11788))
-                log_p <- log_p + log(dtriangle(tau, 0.0002898975, 0.0452621609, 0.016502))
-                log_p <- log_p + log(dtriangle(sigma1, 0.07448498, 0.08281997, 0.078711))
+            #    log_p <- log_p + log(dtriangle(mu, 1.74924, 2.38565, 2.117))
+            #    log_p <- log_p + log(dtriangle(tau, 0.0002898975, 0.0452621609, 0.01650))
+            #    log_p <- log_p + log(dtriangle(sigma1, 0.07448498, 0.08281997, 0.07871))
                 log_p <- log_p + log(dtriangle(mu_vac, 0.04056842, 0.11162242, 0.06686))
-                log_p <- log_p + log(dtriangle(sigma1_vac, 0.1067942, 0.8342593, 0.31020))
+                log_p <- log_p + log(dtriangle(sigma1_vac, 0.1067942, 0.8342593, 0.31019))
                 return(log_p)
             },
             custom_ab_kin_func = ab_kin_vac_prev_hist,
@@ -116,16 +122,17 @@ get_model_info_hcw_pre_full <- function(study) {
             pars_plot = c("mu", "sigma1", "tau", "mu_vac", "sigma1_vac", "mu_short_vac", "wane_vac", "sigma2_vac", "rho_wane"),
             prior_function = function(cur_pars) { 
                 require(triangle)
-                 mu <- cur_pars[["mu"]]
+                log_p <- 0
+             #   mu <- cur_pars[["mu"]]
+             #   tau <- cur_pars[["tau"]]
+            #    sigma1 <- cur_pars[["sigma1"]]
                 mu_vac <- cur_pars[["mu_vac"]]
-                tau <- cur_pars[["tau"]]
-                sigma1 <- cur_pars[["sigma1"]]
                 sigma1_vac <- cur_pars[["sigma1_vac"]]
-                log_p <- log(dtriangle(mu, 1.74924, 2.38565, 2.11788))
-                log_p <- log_p + log(dtriangle(tau, 0.0002898975, 0.0452621609, 0.016502))
-                log_p <- log_p + log(dtriangle(sigma1, 0.07448498, 0.08281997, 0.078711))
+            #    log_p <- log_p + log(dtriangle(mu, 1.74924, 2.38565, 2.117))
+            #    log_p <- log_p + log(dtriangle(tau, 0.0002898975, 0.0452621609, 0.01650))
+            #    log_p <- log_p + log(dtriangle(sigma1, 0.07448498, 0.08281997, 0.07871))
                 log_p <- log_p + log(dtriangle(mu_vac, 0.04056842, 0.11162242, 0.06686))
-                log_p <- log_p + log(dtriangle(sigma1_vac, 0.1067942, 0.8342593, 0.31020))
+                log_p <- log_p + log(dtriangle(sigma1_vac, 0.1067942, 0.8342593, 0.31019))
                 return(log_p)
             },
             custom_ab_kin_func = ab_kin_vac_prev_hist,
@@ -146,16 +153,17 @@ get_model_info_hcw_pre_full <- function(study) {
             pars_plot = c("mu", "sigma1", "tau", "mu_vac", "sigma1_vac", "mu_short_vac", "wane_vac", "sigma2_vac", "rho_boost", "rho_wane"),
             prior_function = function(cur_pars) { 
                 require(triangle)
-                mu <- cur_pars[["mu"]]
+                log_p <- 0
+             #   mu <- cur_pars[["mu"]]
+             #   tau <- cur_pars[["tau"]]
+            #    sigma1 <- cur_pars[["sigma1"]]
                 mu_vac <- cur_pars[["mu_vac"]]
-                tau <- cur_pars[["tau"]]
-                sigma1 <- cur_pars[["sigma1"]]
                 sigma1_vac <- cur_pars[["sigma1_vac"]]
-                log_p <- log(dtriangle(mu, 1.74924, 2.38565, 2.11788))
-                log_p <- log_p + log(dtriangle(tau, 0.0002898975, 0.0452621609, 0.016502))
-                log_p <- log_p + log(dtriangle(sigma1, 0.07448498, 0.08281997, 0.078711))
+            #    log_p <- log_p + log(dtriangle(mu, 1.74924, 2.38565, 2.117))
+            #    log_p <- log_p + log(dtriangle(tau, 0.0002898975, 0.0452621609, 0.01650))
+            #    log_p <- log_p + log(dtriangle(sigma1, 0.07448498, 0.08281997, 0.07871))
                 log_p <- log_p + log(dtriangle(mu_vac, 0.04056842, 0.11162242, 0.06686))
-                log_p <- log_p + log(dtriangle(sigma1_vac, 0.1067942, 0.8342593, 0.31020))
+                log_p <- log_p + log(dtriangle(sigma1_vac, 0.1067942, 0.8342593, 0.31019))
                 return(log_p)
             },
             custom_ab_kin_func = ab_kin_vac_prev_hist,

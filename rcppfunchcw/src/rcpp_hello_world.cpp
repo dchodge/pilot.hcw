@@ -184,6 +184,7 @@ void ab_kin_vac(
   NumericVector infection_times = infection_info["inf_times"];
   IntegerVector infection_strain_indices_tmp = infection_info["inf_indices"];
 
+
   int index_in_samples = indexing["index_in_samples"];
   int end_index_in_samples = indexing["end_index_in_samples"];
   int start_index_in_data = indexing["start_index_in_data"];
@@ -296,7 +297,7 @@ void ab_kin_vac(
             for(int k = 0; k < n_titres; ++k){
               index = measurement_strain_indices[tmp_titre_index + k]*number_strains + inf_map_index;
               predicted_titres[tmp_titre_index + k] += seniority *
-                ((mu*antigenic_map_long[index]) + (mu_short*antigenic_map_short[index])*wane_amount);
+                ((mu * antigenic_map_long[index]) + (mu_short*antigenic_map_short[index])*wane_amount);
             }
         }
         ++x_inf;
@@ -305,6 +306,7 @@ void ab_kin_vac(
       if (indicatior_vac[x] & (vac_flag)) {
           ++n_vac;
           if(sampling_time > vaccination_times[x_vac]) {
+
             time = sampling_time - vaccination_times[x_vac]; // Time er vaccination
             wane_amount_vac = MAX(0, 1.0 - (wane_vac*time)); // Basic waning function
 
@@ -317,8 +319,9 @@ void ab_kin_vac(
 
             for(int k = 0; k < n_titres; ++k){
               index = measurement_strain_indices[tmp_titre_index + k]*number_strains + vac_map_index;
-              predicted_titres[tmp_titre_index + k] += (seniority) * ((mu*mu_vac * antigenic_map_long_vac[index]) +
+              double titre_incr_amount = (seniority) * ((mu * mu_vac * antigenic_map_long_vac[index]) +
                 (mu_short_vac * antigenic_map_short_vac[index]) * wane_amount_vac);
+              predicted_titres[tmp_titre_index + k] += titre_incr_amount;
             }
           }
           ++x_vac;
@@ -497,8 +500,8 @@ void ab_kin_vac_prev_hist(
               }
             }
 
-            time = sampling_time - vaccination_times[x_vac] - 1; // Timr vaccination
-            wane_amount_vac = MAX(0, 1.0 - (((rho_wane_par) / 12 + wane_vac)*time*rho_wane_par)); // Basic waning function
+            time = sampling_time - vaccination_times[x_vac]; // Time vaccination
+            wane_amount_vac = MAX(0, 1.0 - ((1 / 12 + wane_vac) * time * rho_wane_par)); // Basic waning function
             if (tau_vac ==  1) {
               seniority = MAX(0, 1.0 - tau*(n_inf + n_vac - 1.0)); // Antigenic seniority
             } else {

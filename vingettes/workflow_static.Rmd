@@ -46,6 +46,7 @@ Currently using the serosolver
 
 install_github("https://github.com/dchodge/serosolver", ref = "custom_ab")
 require(serosolver)
+
 devtools::load_all()
 load(here::here("data", "hcwpre_data.RDS"))
 get_model_info_hcw_pre(hcwpre)
