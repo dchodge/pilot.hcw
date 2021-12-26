@@ -479,8 +479,9 @@ void ab_kin_vac_prev_hist(
               wane_amount = 0;
             }
             inf_map_index = infection_strain_indices_tmp[x_inf]; // Index of this infecting strain in antigenic map
+
             for(int k = 0; k < n_titres; ++k){
-              index = measurement_strain_indices[tmp_titre_index + k]*number_strains + inf_map_index;
+              index = measurement_strain_indices[tmp_titre_index + k] * number_strains + inf_map_index;
               predicted_titres[tmp_titre_index + k] += seniority *
                 ((mu*antigenic_map_long[index]) + (mu_short*antigenic_map_short[index])*wane_amount);
             }
@@ -508,11 +509,16 @@ void ab_kin_vac_prev_hist(
               seniority = MAX(0, 1.0 - tau*(n_inf - 1.0)); // Antigenic seniority
             }
             vac_map_index = vaccination_strain_indices_tmp[x_vac]; // Index of this vaccinating strain in antigenic map
-
-            for (int k = 0; k < n_titres; ++k) {
+            for (int k = 0; k < n_titres; ++k) { 
+              // check measure_stain_indicies is the right vector here
               index = measurement_strain_indices[tmp_titre_index + k]*number_strains + vac_map_index;
-              predicted_titres[tmp_titre_index + k] += (seniority) * ((mu * mu_vac * antigenic_map_long_vac[index]) +
-                ((mu_short_vac * rho_boost_par) * antigenic_map_short_vac[index]) * wane_amount_vac);
+              double titre_incr_amount_long = seniority * (mu * mu_vac * antigenic_map_long_vac[index]);
+              double titre_incr_amount_short = seniority * ((mu_short_vac * rho_boost_par) * antigenic_map_short_vac[index]) * wane_amount_vac;
+              double titre_incr_amount = titre_incr_amount_long + titre_incr_amount_short;
+            //  Rcpp::Rcout << "Time: " << time << ". titre_incr_amount: " << titre_incr_amount << ". seniority: " << seniority << std::endl;
+            //  Rcpp::Rcout << "mu_short_vac: " << mu_short_vac << ". wane_amount_vac: " << wane_amount_vac << ". titre_incr_amount_short: " << titre_incr_amount_short << std::endl;
+
+              predicted_titres[tmp_titre_index + k] += titre_incr_amount;
             }
           }
           ++x_vac;

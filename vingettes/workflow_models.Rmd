@@ -75,16 +75,6 @@ load(file = here::here("data", paste0("modelinfo_full_", hcwpre$study_name_short
 ```{r}
 
 load(file = here::here("data", paste0("modelinfo_cross_", hcwpre$study_name_short, ".RDS"))) #all_models_hcw_pre_cross
-
-setup_run_serosolver(
-    all_models_hcw_pre_cross[[4]],
-    chains = 4,
-    iterations = 20000,
-    pt = TRUE,
-    filename = "dis_dep",
-    cross_sectional = TRUE,
-    continue_run = FALSE)
-
 1:9 %>% map(~setup_run_serosolver(
     all_models_hcw_pre_cross[[.x]],
     chains = 4,
@@ -94,11 +84,6 @@ setup_run_serosolver(
     cross_sectional = TRUE,
     continue_run = FALSE)
 )
-
-```
-
-
-```{r}
 
 load(file = here::here("data", paste0("modelinfo_full_", hcwpre$study_name_short, ".RDS"))) #all_models_hcw_pre_full
 1:4 %>% map(~setup_run_serosolver(
@@ -113,6 +98,7 @@ load(file = here::here("data", paste0("modelinfo_full_", hcwpre$study_name_short
 
 ```
 
+
 # Load the mcmc and plot the traces and schematics of titre loss
 ```{r}
 
@@ -125,7 +111,6 @@ all_post_test_cross <- all_models_hcw_pre_cross %>%
         burnin = 0,
         thin = 1))
 
-        # Trim the the data, use last 50% and throw out outliers 
 all_post_test_cross_trim <- vector(mode = "list", length = 9)
 samp_no_list <- vector(mode = "list", length = 9)
 for (p in 1:9) { 
@@ -135,18 +120,25 @@ for (p in 1:9) {
     pars_plot <- setdiff(all_models_hcw_pre_cross[[p]]$other$pars_plot, "tau_vac" )
     all_post_test_cross_trim[[p]] <- chain_list %>% map(~(.x[B:L, pars_plot] %>% as.data.frame))
     samp_no_list[[p]] <- chain_list %>% map(~.x[B:L, c("sampno")])
-
-    #trimmed_post_list <- chain_list %>% map(~.x[B:L, all_models_hcw_pre_cross[[p]]$other$pars_plot])
-
-   # bool_vec_list <- trimmed_post_list %>% map(~aq.plot(.x,
-    #        delta = qchisq(0.975, df = ncol(trimmed_post_list[[1]])), quan = 1, alpha = 0.01)[[1]])
-   # all_post_test_cross_trim[[p]] <- 1:4 %>% map(~as.data.frame(trimmed_post_list[[.x]][!bool_vec_list[[.x]], ]))
 }
+
+all_post_test_cross_trim_inf_hist <- vector(mode = "list", length = 9)
+samp_no_list <- vector(mode = "list", length = 9)
+for (p in 1:9) { 
+    L <- nrow(all_post_test_cross[[p]]$inf_list_chains[[1]])
+    B <- round(L / 2)
+    inf_hist <- all_post_test_cross[[p]]$inf_list_chains
+    all_post_test_cross_trim_inf_hist[[p]] <- inf_hist %>%
+        map(~(.x %>% filter(sampno == 1200001) %>% as.data.frame %>%
+        rename(yr = i, id = j)))
+}
+
+post_cross <- list(post_raw = all_post_test_cross, post_trim = all_post_test_cross_trim, inf_hist_trim = all_post_test_cross_trim_inf_hist)
+save(post_cross, file = here::here("outputs", "hcw_pre", "fits", "dis_dep", "cross_sec", "trimmed_post_cross.Rdata"))
 
 ```
 
 
-#
 # Comparison figures and statistics in sum_figs folder
 
 ```{r}
@@ -167,71 +159,6 @@ save_plot_waic_cross(all_models_hcw_pre_cross, file = "dis_dep")
 
 ```
 
-# Plot sensible things
-
-```{r}
-
-all_post_test_cross_trim_inf_hist <- vector(mode = "list", length = 9)
-samp_no_list <- vector(mode = "list", length = 9)
-for (p in 1:9) { 
-    L <- nrow(all_post_test_cross[[p]]$inf_list_chains[[1]])
-    B <- round(L / 2)
-    inf_hist <- all_post_test_cross[[p]]$inf_list_chains
-    all_post_test_cross_trim_inf_hist[[p]] <- inf_hist %>%
-        map(~(.x %>% filter(sampno == 1200001) %>% as.data.frame %>%
-        rename(yr = i, id = j)))
-}
-
-
-chain <- as.data.frame(all_post_test_cross[[6]]$theta_chain) %>% filter(chain_no == 1)
-infection_histories <- all_post_test_cross[[6]]$inf_chain %>% filter(chain_no == 1)
-titre_dat <- all_models_hcw_pre_cross[[6]]$create_post$titre_data %>% filter(sample_time == 0)
-vaccination_histories <- all_models_hcw_pre_cross[[6]]$create_post$vaccination_histories
-
-antigenic_map <- all_models_hcw_pre_cross[[6]]$create_post$antigenic_map
-strain_isolation_times <-  all_models_hcw_pre_cross[[6]]$create_post$strain_isolation_times
-par_tab <- all_models_hcw_pre_cross[[6]]$create_post$par_tab
-
-vaccination_histories <- all_models_hcw_pre_cross[[6]]$create_post$vac_history
-custom_ab_kin_func <- all_models_hcw_pre_cross[[6]]$custom_ab_kin_func
-custom_ab_kin_func_1 <- all_models_hcw_pre_cross[[1]]$custom_ab_kin_func
-
-custom_antigenic_maps_func <- all_models_hcw_pre_cross[[6]]$custom_antigenic_maps_func
-
-expand_titredat <- FALSE
-nsamp <- 100
-titre_before_infection <- FALSE
-measurement_indices_by_time <- NULL
-individuals <- unique(titre_dat$individual)
-mu_indices <- NULL
-
-y <- get_titre_predictions(chain = chain,
-                        infection_histories = infection_histories,
-                        vaccination_histories = vaccination_histories,
-                        titre_dat = titre_dat,
-                        individuals = 1:49,
-                        antigenic_map = antigenic_map,
-                        strain_isolation_times = strain_isolation_times,
-                        par_tab = par_tab,
-                        custom_ab_kin_func = custom_ab_kin_func,
-                        custom_antigenic_maps_func = custom_antigenic_maps_func
-                        )
-
-plot_infection_histories_long(
-                        chain = chain,
-                        infection_histories = infection_histories,
-                        vaccination_histories = vaccination_histories,
-                        titre_dat = titre_dat,
-                        individuals = 49,
-                        antigenic_map = antigenic_map,
-                        strain_isolation_times = strain_isolation_times,
-                        par_tab = par_tab,
-                        custom_ab_kin_func = custom_ab_kin_func,
-                        custom_antigenic_maps_func = custom_antigenic_maps_func)
-
-
-```
-
 
 # Get the priors for the full version
 
@@ -245,8 +172,7 @@ post_best %>% apply(2, quantile, c(0.01, 0.99)) %>% as.data.frame
 ```
 
 
-
-## Full data 
+## Load all the data from the full simulations
 
 ```{r}
 
@@ -259,15 +185,6 @@ all_post_test_full <- all_models_hcw_pre_full %>%
         burnin = 0,
         thin = 1))
 
-purrr::map2(all_post_test_full, all_models_hcw_pre_full, ~plot_traces(.x, .y, file = "dis_dep/full"))
-purrr::map2(all_post_test_full, all_models_hcw_pre_full, ~plot_titre_post(.x, .y, file = "dis_dep/full"))
-purrr::map2(all_post_test_full, all_models_hcw_pre_full, ~plot_histogram(.x, .y, file = "dis_dep/full"))
-
-```
-
-
-```{r}
-
 # Trim the the data, use last 50% and throw out outliers 
 all_post_test_full_trim <- vector(mode = "list", length = 4)
 samp_no_list <- vector(mode = "list", length = 4)
@@ -275,17 +192,35 @@ for (p in 1:4) {
     L <- nrow(all_post_test_full[[p]]$theta_list_chain[[1]])
     B <- round(L / 2)
     chain_list <- all_post_test_full[[p]]$theta_list_chain
-    pars_plot <- setdiff(all_models_hcw_pre_full[[p]]$other$pars_plot, "tau_vac" )
+    pars_plot <- setdiff(all_models_hcw_pre_full[[p]]$other$pars_plot, c("tau_vac", "mu", "sigma1", "tau" ))
     all_post_test_full_trim[[p]] <- chain_list %>% map(~(.x[B:L, pars_plot] %>% as.data.frame))
     samp_no_list[[p]] <- chain_list %>% map(~.x[B:L, c("sampno")])
-
-    #trimmed_post_list <- chain_list %>% map(~.x[B:L, all_models_hcw_pre_cross[[p]]$other$pars_plot])
-
-   # bool_vec_list <- trimmed_post_list %>% map(~aq.plot(.x,
-    #        delta = qchisq(0.975, df = ncol(trimmed_post_list[[1]])), quan = 1, alpha = 0.01)[[1]])
-   # all_post_test_cross_trim[[p]] <- 1:4 %>% map(~as.data.frame(trimmed_post_list[[.x]][!bool_vec_list[[.x]], ]))
 }
 
+all_post_test_full_trim_inf_hist <- vector(mode = "list", length = 4)
+samp_no_list <- vector(mode = "list", length = 4)
+for (p in 1:4) { 
+    L <- nrow(all_post_test_full[[p]]$inf_list_chains[[1]])
+    B <- round(L / 2)
+    inf_hist <- all_post_test_full[[p]]$inf_list_chains
+    all_post_test_full_trim_inf_hist[[p]] <- inf_hist %>%
+        map(~(.x %>% filter(sampno == 1300001) %>% as.data.frame %>%
+        rename(yr = i, id = j)))
+}
+
+post_full <- list(post_raw = all_post_test_full, post_trim = all_post_test_full_trim, inf_hist_trim = all_post_test_full_trim_inf_hist)
+save(post_full, file = here::here("outputs", "hcw_pre", "fits", "dis_dep", "cross_sec", "trimmed_post_full.Rdata"))
+
+
+```
+
+# Plot all the figures
+
+```{r}
+
+purrr::map2(all_post_test_full, all_models_hcw_pre_full, ~plot_traces(.x, .y, file = "dis_dep/full"))
+purrr::map2(all_post_test_full, all_models_hcw_pre_full, ~plot_titre_post(.x, .y, file = "dis_dep/full"))
+purrr::map2(all_post_test_full, all_models_hcw_pre_full, ~plot_histogram(.x, .y, file = "dis_dep/full"))
 
 # Plots box plots of the 8 different models
 plot_post_compare_full(all_post_test_full_trim, all_models_hcw_pre_full, file = "dis_dep/full")
@@ -296,48 +231,5 @@ save_plot_mpsrf_full(mpsrf_df, all_models_hcw_pre_full[[1]], file = "dis_dep/ful
 
 # Plots the waics for the models and compare
 save_plot_waic_full(all_models_hcw_pre_full, file = "dis_dep", cross_sec = FALSE)
-
-```
-
-
-# Post plots 
-
-```{r}
-
-postplots_long <- all_post_test_full_trim[[1]] %>% bind_rows
-dec <- 1:12 %>% map(~
-    postplots_long[["mu"]] * postplots_long[["mu_vac"]] + (postplots_long[["mu_short_vac"]] * (1.0 - ((1 / 12 + postplots_long[["wane_vac"]]) * .x )))
-) 
-
-df_dec <- dec %>% setNames(as.character(c(1:12))) %>%
-    as.data.frame %>% pivot_longer(c(1:12), values_to = "titre", names_to = "time") %>%
-    mutate(time = str_extract(time, "[0-9,.]+")) %>%
-    mutate(time = factor(time, levels = as.character(c(1:12))))
-df_dec <- df_dec[df_dec$titre > 0, ]
-
-sero_data <- hcwpre$sero_data
-sum_data <- sero_data %>% group_by(sample_time, titre_value) %>% summarise(n = n()) 
-weighted_sum_data <- sum_data %>% summarise(w_mean = weighted.mean(titre_value, n, na.rm = TRUE)) %>%
-    mutate(sample_time = sample_time / 30)
- 
-ggplot() +
-        geom_point(data = sum_data, aes(x = sample_time, y = titre_value, size = n), fill = "black", alpha = 0.5) +
-        geom_line(data = weighted_sum_data, aes(x = sample_time, y = w_mean), color = "red", size = 1) +
-        geom_point(data = weighted_sum_data, aes(x = sample_time, y = w_mean), shape = 21, fill = "red", size = 5) + 
-        labs(x = "Time post vaccination", y = "Titre value", size = "Number of samples")
-
-df_dec %>%
-    ggplot() + 
-        geom_boxplot(aes(x = time, y = titre)) +
-        labs(x = "Months post vaccination") +
-        geom_point(data = weighted_sum_data, aes(x = sample_time, y = w_mean), shape = 8, color = "red", size = 5) +
-        geom_hline(yintercept = postplots_long[["mu"]] * postplots_long[["mu_vac"]]  %>% mean)
-
-```
-
-
-```{r}
-
-
 
 ```
