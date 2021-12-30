@@ -5,10 +5,13 @@ get_model_info_hcw_pre_cross <- function(study) {
             list("mu_vac",       1, 1, 0.1, 0, 1,  0, 1, 1),
             list("mu_short_vac", 0, 1, 0.1, 0, 4,  1, 3, 1),
             list("wane_vac",     0, 1, 0.1, 0, 1,    0.01,  0.1, 1),
-            list("tau_vac",      0, 1, 0.1,  0, 0.2,  0.01, 0.1, 0),
+            list("tau_vac",      0, 1, 0.1,  0, 1,  0.01, 0.1, 0),
             list("sigma1_vac",   1, 1, 0.1, 0.1, 10, 1.0, 2.0, 1),
             list("sigma2_vac",   0, 1, 0.1, 0, 1,  0.01, 0.1, 1)
             )
+    
+    par_tab_vac <- par_tab_vac %>%
+        mutate(upper_bound = replace(upper_bound, names == "tau", 0.2)) 
         
     par_tab_vac$steps <- par_tab_vac$steps / 10
     model_novac <- make_model_info(
