@@ -165,7 +165,7 @@ save_plot_waic_cross(all_models_hcw_pre_cross, file = "dis_dep")
 ```{r}
 
 # Best fit model is mt according to waic
-post_best <- all_post_test_cross_trim[[6]] %>% bind_rows
+post_best <- all_post_test_cross_trim[[3]] %>% bind_rows
 post_best %>% apply(2, median) %>% as.data.frame %>% t
 post_best %>% apply(2, quantile, c(0.01, 0.99)) %>% as.data.frame
 
