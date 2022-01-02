@@ -447,7 +447,10 @@ void ab_kin_vac_prev_hist(
     }
   }
 
-  for(int j = index_in_samples; j <= end_index_in_samples; ++j){
+  Rcpp::Rcout << "indicatior_inf: " << indicatior_inf << std::endl;
+  Rcpp::Rcout << "indicatior_vac: " << indicatior_vac << std::endl;
+
+  for (int j = index_in_samples; j <= end_index_in_samples; ++j) {
     sampling_time = sample_times[j];
     n_inf = 0.0;
     n_vac = 0.0;
@@ -483,7 +486,7 @@ void ab_kin_vac_prev_hist(
             for(int k = 0; k < n_titres; ++k){
               index = measurement_strain_indices[tmp_titre_index + k] * number_strains + inf_map_index;
               predicted_titres[tmp_titre_index + k] += seniority *
-                ((mu*antigenic_map_long[index]) + (mu_short*antigenic_map_short[index])*wane_amount);
+                ((mu * antigenic_map_long[index]) + (mu_short * antigenic_map_short[index]) * wane_amount);
             }
         }
         ++x_inf;
@@ -509,6 +512,10 @@ void ab_kin_vac_prev_hist(
               seniority = MAX(0, 1.0 - tau*(n_inf - 1.0)); // Antigenic seniority
             }
             vac_map_index = vaccination_strain_indices_tmp[x_vac]; // Index of this vaccinating strain in antigenic map
+           // Rcpp::Rcout << "n_titres: " << n_titres << std::endl;
+            double sigma2_vac = theta["sigma2_vac"];
+            //Rcpp::Rcout << "sigma2_vac " << sigma2_vac << std::endl;
+           // Rcpp::Rcout << "vac_map_index: " << vac_map_index << std::endl;
             for (int k = 0; k < n_titres; ++k) { 
               // check measure_stain_indicies is the right vector here
               index = measurement_strain_indices[tmp_titre_index + k]*number_strains + vac_map_index;
@@ -517,6 +524,9 @@ void ab_kin_vac_prev_hist(
               double titre_incr_amount = titre_incr_amount_long + titre_incr_amount_short;
             //  Rcpp::Rcout << "Time: " << time << ". titre_incr_amount: " << titre_incr_amount << ". seniority: " << seniority << std::endl;
             //  Rcpp::Rcout << "mu_short_vac: " << mu_short_vac << ". wane_amount_vac: " << wane_amount_vac << ". titre_incr_amount_short: " << titre_incr_amount_short << std::endl;
+         //     Rcpp::Rcout << "antigenic_map_short_vac[index]: " << antigenic_map_short_vac[index] << std::endl;
+         //     Rcpp::Rcout << "sampling_time: " << sampling_time << std::endl;
+         //     Rcpp::Rcout << "time: " << time << ". titre_incr_amount_long: " << titre_incr_amount_long << ". titre_incr_amount_short: " << titre_incr_amount_short << std::endl;
 
               predicted_titres[tmp_titre_index + k] += titre_incr_amount;
             }

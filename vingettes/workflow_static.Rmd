@@ -80,6 +80,7 @@ sero_data_base <- sero_data %>%
         summarise(titre_mean = mean(titre_value, rm.na = TRUE)) %>%
          pivot_wider(names_from = sample_time, values_from = titre_mean) %>%
         mutate(day30_change = (`30` - `0`) / `0`, day180_change = (`180` - `0`) / `0`) %>%
+    #    mutate(day30_change = (`30`), day180_change = `180` ) %>%
         select(virus_isol_yr, base = `0`, day30_change, day180_change) %>%
         pivot_longer(c(day30_change, day180_change), names_to = "time", values_to = "prop") %>%
         mutate(time = case_when(time == "day30_change"~"30", time == "day180_change"~"180"))

@@ -65,7 +65,7 @@ get_model_info_hcw_pre_full(hcwpre)
 #load(file = here::here("outputs", "hcw_pre", "fits", "dis_dep", "cross_sec", "trimmed_post_cross.Rdata"))
 all_post_test_cross <- post_cross$post_raw
 
-chain <- as.data.frame(all_post_test_cross[[6]]$theta_chain) %>% filter(chain_no == 1)
+chain_short <- as.data.frame(all_post_test_cross[[6]]$theta_chain) %>% filter(chain_no == 1)
 infection_histories <- all_post_test_cross[[6]]$inf_chain %>% filter(chain_no == 1)
 titre_dat <- all_models_hcw_pre_cross[[6]]$create_post$titre_data %>% filter(sample_time == 0)
 vaccination_histories <- all_models_hcw_pre_cross[[6]]$create_post$vaccination_histories
@@ -87,7 +87,7 @@ measurement_indices_by_time <- NULL
 individuals <- unique(titre_dat$individual)
 mu_indices <- NULL
 
-y <- get_titre_predictions(chain = chain,
+y <- get_titre_predictions(chain = chain_short,
                         infection_histories = infection_histories,
                         vaccination_histories = vaccination_histories,
                         titre_dat = titre_dat,
@@ -117,31 +117,13 @@ plot_infection_histories_long(
 
 ```{r}
 
-strain_isolation_times
-vrius_t <- titre_dat %>% pull(virus) %>% unique
-virus_v <- vaccination_histories %>% pull(virus) %>% unique
-
-check_strains <- function(strain_isolation_times, titre_dat, vaccination_histories) {
-    vrius_t <- titre_dat %>% pull(virus) %>% unique
-    virus_v <- vaccination_histories %>% pull(virus) %>% unique
-    sum(!(vrius_t %in% strain_isolation_times))
-    sum(!(virus_v %in% strain_isolation_times))
-}
-
-individuals_id <- vaccination_histories %>% pull(individual) %>% unique 
-vaccination_histories %>%
-    complete(nesting(virus = strain_isolation_times, time = strain_isolation_times), individual = individuals_id, 
-    fill = list(vac_flag = 0, prev_vac = 0)) %>%
-            dplyr::select(individual, virus, vac_flag) %>%
-            unique %>%
-            pivot_wider(names_from = virus, values_from = vac_flag)
 
 
 load(file = here::here("data", paste0("modelinfo_full_", hcwpre$study_name_short, ".RDS"))) #all_models_hcw_pre_cross
 load(file = here::here("outputs", "hcw_pre", "fits", "dis_dep", "full", "trimmed_post_full.Rdata"))
 
 all_post_test_full <- post_full$post_raw
-chain <- as.data.frame(all_post_test_full[[1]]$theta_chain) %>% filter(chain_no == 1)
+chain_full <- as.data.frame(all_post_test_full[[1]]$theta_chain) %>% filter(chain_no == 1)
 infection_histories <- all_post_test_full[[1]]$inf_chain %>% filter(chain_no == 1)
 titre_dat <- all_models_hcw_pre_full[[1]]$create_post$titre_data 
 vaccination_histories <- all_models_hcw_pre_full[[1]]$create_post$vaccination_histories
@@ -163,8 +145,10 @@ measurement_indices_by_time <- NULL
 individuals <- unique(titre_dat$individual)
 mu_indices <- NULL
 
+chain_full <- chain_full %>% filter(sampno > 300000)
+
 y <- get_titre_predictions(
-    chain = chain,
+    chain = chain_full,
     infection_histories = infection_histories,
     vaccination_histories = vaccination_histories,
     titre_dat = titre_dat,
@@ -177,17 +161,20 @@ y <- get_titre_predictions(
 )
 
 plot_infection_histories_long(
-    chain = chain,
+    chain = chain_full,
     infection_histories = infection_histories,
     vaccination_histories = vaccination_histories,
     titre_dat = titre_dat,
-    individuals = 1:49,
+    individuals = 49,
     antigenic_map = antigenic_map,
     strain_isolation_times = strain_isolation_times,
     par_tab = par_tab,
     custom_ab_kin_func = custom_ab_kin_func,
     custom_antigenic_maps_func = custom_antigenic_maps_func
 )
+
+chain_full$mu_vac %>% mean
+chain_full$mu_short_vac %>% mean
 
 
 ```
@@ -225,6 +212,18 @@ df_dec %>%
         geom_boxplot(aes(x = time, y = titre)) +
         labs(x = "Months post vaccination") +
         geom_point(data = weighted_sum_data, aes(x = sample_time, y = w_mean), shape = 8, color = "red", size = 5) +
-        geom_hline(yintercept = postplots_long[["mu"]] * postplots_long[["mu_vac"]]  %>% mean)
+        geom_hline(yintercept = postplots_long[["mu"]] * postplots_long[["mu_vac"]] %>% mean)
+
+```
+
+
+```{r}
+
+antigenic_map_melted <- c(melt_antigenic_coords(antigenic_map[, c("x_coord", "y_coord")]))
+
+chain$sigma1 %>% mean
+s <- 0.01
+lapply(antigenic_map_melted, function(x) max(1 - x * s, 0)) %>% unlist
+
 
 ```
