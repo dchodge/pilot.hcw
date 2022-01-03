@@ -133,7 +133,32 @@ get_model_info_hcw_pre_full <- function(study) {
             custom_antigenic_maps_func = make_antigenic_maps_vac1
             )
 
-    all_models <- list(model_vac_full, model_vac_m1, model_vac_m2, model_vac_m3)
+        par_tab_m4 <- par_tab_vac %>%
+            mutate(values = replace(values, names == "mu_short", 1)) %>%
+            mutate(values = replace(values, names == "mu_short_vac", 1)) %>%
+            mutate(lower_bound = replace(lower_bound, names == "mu_short_vac", 1))
+
+        model_vac_m4 <- make_model_info(study = study,
+                par_tab = par_tab_m4,
+                antigenic_map = antigenic_map,
+                sample_yr = 2016,
+                prior_version = 2,
+                output_file = "hpc/outputs/",
+                vacc_type = "vac",
+                model_name = "m4",
+                pars_plot = c("mu", "sigma1", "tau", "mu_vac", "mu_short_vac", "wane_vac", "sigma2_vac"),
+                prior_function = function(cur_pars) {
+                    require(triangle)
+                    log_p <- 0
+                    mu_vac <- cur_pars[["mu_vac"]]
+                    log_p <- log_p + log(dtriangle(mu_vac, 0.09169635, 0.15619417, 0.1246219))
+                    return(log_p)
+                },
+                custom_ab_kin_func = ab_kin_vac_rel,
+                custom_antigenic_maps_func = make_antigenic_maps_vac1
+                )
+
+    all_models <- list(model_vac_full, model_vac_m1, model_vac_m2, model_vac_m3, model_vac_m4)
     all_models_hcw_pre_full <- all_models %>% map(~convert_to_resolution(.x, 12))
 
     save(all_models_hcw_pre_full, file = here::here("data", paste0("modelinfo_full_", study$study_name_short, ".RDS")))
