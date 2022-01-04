@@ -122,21 +122,23 @@ plot_infection_histories_long(
 load(file = here::here("data", paste0("modelinfo_full_", hcwpre$study_name_short, ".RDS"))) #all_models_hcw_pre_cross
 load(file = here::here("outputs", "hcw_pre", "fits", "dis_dep", "full", "trimmed_post_full.Rdata"))
 
+pos <- 5
+
 all_post_test_full <- post_full$post_raw
-chain_full <- as.data.frame(all_post_test_full[[1]]$theta_chain) %>% filter(chain_no == 1)
-infection_histories <- all_post_test_full[[1]]$inf_chain %>% filter(chain_no == 1)
-titre_dat <- all_models_hcw_pre_full[[1]]$create_post$titre_data 
-vaccination_histories <- all_models_hcw_pre_full[[1]]$create_post$vaccination_histories
+chain_full <- as.data.frame(all_post_test_full[[pos]]$theta_chain) %>% filter(chain_no == 1)
+infection_histories <- all_post_test_full[[pos]]$inf_chain %>% filter(chain_no == 1)
+titre_dat <- all_models_hcw_pre_full[[pos]]$create_post$titre_data 
+vaccination_histories <- all_models_hcw_pre_full[[pos]]$create_post$vaccination_histories
 
-antigenic_map <- all_models_hcw_pre_full[[1]]$create_post$antigenic_map
-strain_isolation_times <-  all_models_hcw_pre_full[[1]]$create_post$strain_isolation_times
-par_tab <- all_models_hcw_pre_full[[1]]$create_post$par_tab
+antigenic_map <- all_models_hcw_pre_full[[pos]]$create_post$antigenic_map
+strain_isolation_times <-  all_models_hcw_pre_full[[pos]]$create_post$strain_isolation_times
+par_tab <- all_models_hcw_pre_full[[pos]]$create_post$par_tab
 
-vaccination_histories <- all_models_hcw_pre_full[[1]]$create_post$vac_history
-custom_ab_kin_func <- all_models_hcw_pre_full[[1]]$custom_ab_kin_func
-custom_ab_kin_func_1 <- all_models_hcw_pre_full[[1]]$custom_ab_kin_func
+vaccination_histories <- all_models_hcw_pre_full[[pos]]$create_post$vac_history
+custom_ab_kin_func <- all_models_hcw_pre_full[[pos]]$custom_ab_kin_func
+custom_ab_kin_func_1 <- all_models_hcw_pre_full[[pos]]$custom_ab_kin_func
 
-custom_antigenic_maps_func <- all_models_hcw_pre_full[[1]]$custom_antigenic_maps_func
+custom_antigenic_maps_func <- all_models_hcw_pre_full[[pos]]$custom_antigenic_maps_func
 
 expand_titredat <- FALSE
 nsamp <- 100
@@ -165,7 +167,7 @@ plot_infection_histories_long(
     infection_histories = infection_histories,
     vaccination_histories = vaccination_histories,
     titre_dat = titre_dat,
-    individuals = 49,
+    individuals = 5,
     antigenic_map = antigenic_map,
     strain_isolation_times = strain_isolation_times,
     par_tab = par_tab,
@@ -185,7 +187,7 @@ chain_full$mu_short_vac %>% mean
 ```{r}
 
 all_post_test_full_trim <- post_full$post_trim
-postplots_long <- all_post_test_full_trim[[1]] %>% bind_rows
+postplots_long <- all_post_test_full_trim[[5]] %>% bind_rows
 dec <- 1:12 %>% map(~
     (postplots_long[["mu_short_vac"]] * (1.0 - ((1 / 12 + postplots_long[["wane_vac"]]) * .x )))
 ) 

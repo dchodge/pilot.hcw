@@ -186,9 +186,9 @@ all_post_test_full <- all_models_hcw_pre_full %>%
         thin = 1))
 
 # Trim the the data, use last 50% and throw out outliers 
-all_post_test_full_trim <- vector(mode = "list", length = 4)
-samp_no_list <- vector(mode = "list", length = 4)
-for (p in 1:4) { 
+all_post_test_full_trim <- vector(mode = "list", length = 5)
+samp_no_list <- vector(mode = "list", length = 5)
+for (p in 1:5) { 
     L <- nrow(all_post_test_full[[p]]$theta_list_chain[[1]])
     B <- round(L / 2)
     chain_list <- all_post_test_full[[p]]$theta_list_chain
@@ -197,9 +197,9 @@ for (p in 1:4) {
     samp_no_list[[p]] <- chain_list %>% map(~.x[B:L, c("sampno")])
 }
 
-all_post_test_full_trim_inf_hist <- vector(mode = "list", length = 4)
-samp_no_list <- vector(mode = "list", length = 4)
-for (p in 1:4) { 
+all_post_test_full_trim_inf_hist <- vector(mode = "list", length = 5)
+samp_no_list <- vector(mode = "list", length = 5)
+for (p in 1:5) { 
     L <- nrow(all_post_test_full[[p]]$inf_list_chains[[1]])
     B <- round(L / 2)
     inf_hist <- all_post_test_full[[p]]$inf_list_chains
@@ -209,7 +209,7 @@ for (p in 1:4) {
 }
 
 post_full <- list(post_raw = all_post_test_full, post_trim = all_post_test_full_trim, inf_hist_trim = all_post_test_full_trim_inf_hist)
-save(post_full, file = here::here("outputs", "hcw_pre", "fits", "dis_dep", "cross_sec", "trimmed_post_full.Rdata"))
+save(post_full, file = here::here("outputs", "hcw_pre", "fits", "dis_dep", "full", "trimmed_post_full.Rdata"))
 
 
 ```

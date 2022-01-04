@@ -71,10 +71,10 @@ save_plot_waic_full <- function(all_models_hcw_pre_cross, file.path = "dis_dep",
     save(waics, file =  here::here("outputs", "hcw_pre", "fits", file.path, file.path.2, "sum_figs", "waics.RDS"))
 
     data.frame(
-        y = 1:8,
-        name = c("base", "m1", "m2", "m3"),
-        waic_mean = waics[1:4] %>% map(~.x$estimates[3, 1]) %>% unlist,
-        waic_sd = waics[1:4] %>% map(~.x$estimates[3, 2]) %>% unlist
+        y = 1:10,
+        name = c("base", "m1", "m2", "m3", "m4"),
+        waic_mean = waics[1:5] %>% map(~.x$estimates[3, 1]) %>% unlist,
+        waic_sd = waics[1:5] %>% map(~.x$estimates[3, 2]) %>% unlist
     ) %>% 
         ggplot(aes(y = name)) + 
             geom_linerange(aes(xmax = waic_mean + 2 * waic_sd, xmin = waic_mean - 2 * waic_sd)) + 

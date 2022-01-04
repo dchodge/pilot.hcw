@@ -174,8 +174,8 @@ calc_mpsrf <- function(postfull, model_info) {
 
 save_plot_mpsrf_full <- function(mpsrf_df, model_info, file) {
     save(mpsrf_df, file = here::here("outputs", model_info$other$study$study_name_short, "fits", file, "sum_figs", "mpsrf.RDS"))
-    models <- c("base", "m1", "m2", "m3")
-    cols <- c("grey", "#1261A0", "#3895D3", "#58CCED")
+    models <- c("base", "m1", "m2", "m3", "m4")
+    cols <- c("grey", "#1261A0", "#3895D3", "#58CCED", "red")
     mpsrf_df %>%
         mutate(model_name = factor(model_name, levels = models)) %>%
         ggplot() +
@@ -224,7 +224,7 @@ calc_waic <- function(postfull, samp_no_list, model_info) {
     log_lik_ind <- matrix(, ncol = N, nrow = NS)
     log_lik_ind_list <- rep(list(log_lik_ind), 3)
     pad_inf_chain_array <- split(pad_inf_chain_1, pad_inf_chain_1$sampno)
-    for (c in 1:4) { 
+    for (c in 1:5) { 
         for (s in 1:NS) {
             theta_chain_thin <- as.data.frame(postfull$theta_chain) %>% filter(sampno %in% samp_no_list[[1]])
             theta_vals_post <- theta_chain_thin[s, 3:(3 + Np)] %>% as.numeric
@@ -243,7 +243,7 @@ calc_waic <- function(postfull, samp_no_list, model_info) {
 
     df_output <- data.frame()
     pWAIC_list <- list()
-    for (c in 1:4) {
+    for (c in 1:5) {
         log_lik_ind <- log_lik_ind_list[[c]]
         log_lik_ind_temp <- lapply(1:N, function(i) log_lik_ind[, i][log_lik_ind[, i] > -Inf])
         llpd <- sapply(1:N, function(i) log(sum(exp(log_lik_ind_temp[[i]]))) - log(NS))
