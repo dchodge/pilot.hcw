@@ -14,7 +14,7 @@ get_model_info_hcw_pre_cross <- function(study) {
         mutate(upper_bound = replace(upper_bound, names == "tau", 0.2)) 
         
     par_tab_vac$steps <- par_tab_vac$steps / 10
-    model_novac <- make_model_info(
+    model_novac <- make_model_info_hcwpre(
             study = study,
             par_tab = par_tab,
             antigenic_map = antigenic_map,
@@ -31,7 +31,7 @@ get_model_info_hcw_pre_cross <- function(study) {
 
     par_tab_vac_ <- par_tab_vac %>%
         mutate(values = replace(values, names == "vac_flag", 1))
-    model_vac_ <- make_model_info(
+    model_vac_ <- make_model_info_hcwpre(
             study = study,
             par_tab = par_tab_vac_,
             antigenic_map = antigenic_map,
@@ -48,7 +48,7 @@ get_model_info_hcw_pre_cross <- function(study) {
 
     par_tab_vac_m <- par_tab_vac_ %>%
         mutate(fixed = replace(fixed, names == "mu_vac", 0))
-    model_vac_m <- make_model_info(study = study,
+    model_vac_m <- make_model_info_hcwpre(study = study,
             par_tab = par_tab_vac_m,
             antigenic_map = antigenic_map,
             sample_yr = 2016,
@@ -64,7 +64,7 @@ get_model_info_hcw_pre_cross <- function(study) {
 
     par_tab_vac_t <- par_tab_vac_ %>%
         mutate(values = replace(values, names == "tau_vac", 1))
-    model_vac_t <- make_model_info(study = study,
+    model_vac_t <- make_model_info_hcwpre(study = study,
             par_tab = par_tab_vac_t,
             antigenic_map = antigenic_map,
             sample_yr = 2016,
@@ -81,7 +81,7 @@ get_model_info_hcw_pre_cross <- function(study) {
 
     par_tab_vac_s <- par_tab_vac_ %>%
         mutate(fixed = replace(fixed, names == "sigma1_vac", 0))
-    model_vac_s <- make_model_info(study = study,
+    model_vac_s <- make_model_info_hcwpre(study = study,
             par_tab = par_tab_vac_s,
             antigenic_map = antigenic_map,
             sample_yr = 2016,
@@ -98,7 +98,7 @@ get_model_info_hcw_pre_cross <- function(study) {
     par_tab_vac_mt <- par_tab_vac_ %>%
         mutate(fixed = replace(fixed, names == "mu_vac", 0)) %>%
         mutate(values = replace(values, names == "tau_vac", 1))
-    model_vac_mt <- make_model_info(study = study,
+    model_vac_mt <- make_model_info_hcwpre(study = study,
             par_tab = par_tab_vac_mt,
             antigenic_map = antigenic_map,
             sample_yr = 2016,
@@ -115,7 +115,7 @@ get_model_info_hcw_pre_cross <- function(study) {
     par_tab_vac_ms <- par_tab_vac_ %>%
         mutate(fixed = replace(fixed, names == "mu_vac", 0)) %>%
         mutate(fixed = replace(fixed, names == "sigma1_vac", 0))
-    model_vac_ms <- make_model_info(study = study,
+    model_vac_ms <- make_model_info_hcwpre(study = study,
             par_tab = par_tab_vac_ms,
             antigenic_map = antigenic_map,
             sample_yr = 2016,
@@ -132,7 +132,7 @@ get_model_info_hcw_pre_cross <- function(study) {
     par_tab_vac_ts <- par_tab_vac_ %>%
         mutate(values = replace(values, names == "tau_vac", 1)) %>%
         mutate(fixed = replace(fixed, names == "sigma1_vac", 0))
-    model_vac_ts <- make_model_info(study = study,
+    model_vac_ts <- make_model_info_hcwpre(study = study,
             par_tab = par_tab_vac_ts,
             antigenic_map = antigenic_map,
             sample_yr = 2016,
@@ -151,7 +151,7 @@ get_model_info_hcw_pre_cross <- function(study) {
         mutate(values = replace(values, names == "tau_vac", 1)) %>%
         mutate(fixed = replace(fixed, names == "sigma1_vac", 0)) %>% 
         mutate(fixed = replace(fixed, names == "mu_vac", 0))
-    model_vac_mts <- make_model_info(study = study,
+    model_vac_mts <- make_model_info_hcwpre(study = study,
             par_tab = par_tab_vac_mts,
             antigenic_map = antigenic_map,
             sample_yr = 2016,

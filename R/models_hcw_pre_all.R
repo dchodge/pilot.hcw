@@ -44,7 +44,7 @@ get_model_info_hcw_pre_full <- function(study) {
 
     par_tab_vac$steps <- par_tab_vac$steps / 10
 
-    model_vac_full <- make_model_info(
+    model_vac_full <- make_model_info_hcwpre(
             study = study,
             par_tab = par_tab_vac,
             antigenic_map = antigenic_map,
@@ -67,7 +67,7 @@ get_model_info_hcw_pre_full <- function(study) {
 
     par_tab_m1 <- par_tab_vac %>%
         mutate(fixed = replace(fixed, names == "rho_boost", 0))
-    model_vac_m1 <- make_model_info(
+    model_vac_m1 <- make_model_info_hcwpre(
             study = study,
             par_tab = par_tab_m1,
             antigenic_map = antigenic_map,
@@ -90,7 +90,7 @@ get_model_info_hcw_pre_full <- function(study) {
 
     par_tab_m2 <- par_tab_vac %>%
         mutate(fixed = replace(fixed, names == "rho_wane", 0))
-    model_vac_m2 <- make_model_info(study = study,
+    model_vac_m2 <- make_model_info_hcwpre(study = study,
             par_tab = par_tab_m2,
             antigenic_map = antigenic_map,
             sample_yr = 2016,
@@ -113,7 +113,7 @@ get_model_info_hcw_pre_full <- function(study) {
     par_tab_m3 <- par_tab_vac %>%
         mutate(fixed = replace(fixed, names == "rho_boost", 0)) %>%
         mutate(fixed = replace(fixed, names == "rho_wane", 0))
-    model_vac_m3 <- make_model_info(study = study,
+    model_vac_m3 <- make_model_info_hcwpre(study = study,
             par_tab = par_tab_m3,
             antigenic_map = antigenic_map,
             sample_yr = 2016,
@@ -138,7 +138,7 @@ get_model_info_hcw_pre_full <- function(study) {
             mutate(values = replace(values, names == "mu_short_vac", 1)) %>%
             mutate(lower_bound = replace(lower_bound, names == "mu_short_vac", 1))
 
-        model_vac_m4 <- make_model_info(study = study,
+        model_vac_m4 <- make_model_info_hcwpre(study = study,
                 par_tab = par_tab_m4,
                 antigenic_map = antigenic_map,
                 sample_yr = 2016,

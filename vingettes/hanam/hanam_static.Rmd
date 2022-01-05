@@ -1,0 +1,143 @@
+
+# cleaning all the data sources
+#
+```{r}
+
+makeclass_hanam()
+
+```
+
+# Make classes out of each data set
+```{r}
+
+library(latex2exp)
+library(patchwork)
+library(here)
+require(plyr)
+require(data.table)
+require(tidyverse)
+library(devtools)
+# Required for this analysis
+require(reshape2)
+require(foreach)
+require(doParallel)
+require(bayesplot)
+require(coda)
+require(ggplot2)
+require(viridis)
+require(ggpubr)
+
+require(foreach)
+require(doParallel)
+require(Rcpp)
+
+require(extrafont)
+require(showtext)
+font_add("Avenir", "/Users/davidhodgson/Documents/personal/fonts/avenir_ff/AvenirLTStd-Book.otf")  
+showtext_auto()
+theme_set(theme_light())
+library(wesanderson)
+
+```
+
+# Load packages and data
+Currently using the serosolver 
+```{r}
+
+#install_github("https://github.com/dchodge/serosolver", ref = "custom_ab")
+require(serosolver)
+
+devtools::load_all()
+load(here::here("data", "hanam_data.RDS"))
+get_model_info_hcw_pre(hcwpre)
+
+````
+
+################################################
+######## A: Exploratory analysis of dataset ########
+################################################
+######## Look at titre values (overall)
+```{r}
+
+sero_data <- hanam$sero_data
+sum_data <- sero_data %>% group_by(sample_time, titre_value) %>% summarise(n = n()) 
+weighted_sum_data <- sum_data %>% summarise(w_mean = weighted.mean(titre_value, n, na.rm = TRUE))
+ 
+plot_data1 <- sero_data %>% group_by(virus_isol_yr, sample_time) %>%
+        summarise(titre_value = mean(titre_value)) %>%
+        mutate(sample_time = factor(as.character(sample_time), levels = unique(as.character(sample_time)))) %>%
+        filter(virus_isol_yr < 2016)
+
+p1 <- plot_data1 %>%
+        ggplot() + 
+                geom_line(aes(x = virus_isol_yr, y = titre_value, color = sample_time), size = 1) +
+                geom_point(aes(x = virus_isol_yr, y = titre_value, fill = sample_time), shape = 21, size = 3) + 
+                labs(x = "Year of circulating virus", y = "Titre value", fill = "Time post-vac") + 
+                scale_fill_manual(values = c("gray", "red", "pink", "blue", "green", "yellow")) + 
+                scale_color_manual(values = c("gray", "red", "pink", "blue", "green", "yellow"))
+
+p2 <- ggplot() +
+        geom_point(data = sum_data, aes(x = sample_time, y = titre_value, size = n), fill = "black", alpha = 0.5) +
+        geom_line(data = weighted_sum_data, aes(x = sample_time, y = w_mean), color = "red", size = 1) +
+        geom_point(data = weighted_sum_data, aes(x = sample_time, y = w_mean), shape = 21, fill = "red", size = 5) + 
+        labs(x = "Time post vaccination", y = "Titre value", size = "Number of samples") 
+
+p1 / p2
+ggsave(file = here::here("outputs", "hanam", "analysis", "figs", "figA.pdf"))
+
+```
+
+######## Look at titre value change relative to starting titre and year of isolation
+
+```{r}
+
+
+sero_data_base <- sero_data %>% 
+        filter(sample_time %in% c(0, 14, 280)) %>%
+        group_by(virus_isol_yr, sample_time) %>%
+        summarise(titre_mean = mean(titre_value, rm.na = TRUE)) %>%
+        pivot_wider(names_from = sample_time, values_from = titre_mean) %>%
+        mutate(day14 = (`14` - `0`), day280 = (`280` - `0`) ) %>%
+        select(virus_isol_yr, base = `0`, day14, day280) %>%
+        pivot_longer(c(day14, day280), names_to = "time", values_to = "abs") %>%
+        mutate(time = case_when(time == "day14"~"14", time == "day280"~"280"))
+
+sero_data_base_rel <- sero_data %>% 
+        filter(sample_time %in% c(0, 14, 280)) %>%
+        group_by(virus_isol_yr, sample_time) %>%
+        summarise(titre_mean = mean(titre_value, rm.na = TRUE)) %>%
+         pivot_wider(names_from = sample_time, values_from = titre_mean) %>%
+        mutate(day14_change = (`14` - `0`) / `0`, day280_change = (`280` - `0`) / `0`) %>%
+        select(virus_isol_yr, base = `0`, day14_change, day280_change) %>%
+        pivot_longer(c(day14_change, day280_change), names_to = "time", values_to = "prop") %>%
+        mutate(time = case_when(time == "day14_change"~"14", time == "day280_change"~"280"))
+ 
+p1 <- sero_data_base %>%
+        ggplot(aes(x = virus_isol_yr, y = abs, )) +
+                geom_line(aes(group = virus_isol_yr)) +
+                geom_point(aes(fill = time), shape = 21, size = 3) +
+                labs(x = "Year of circulating virus", y = "Change in titre post-vac (abs)", fill = "Days post-vac")
+
+p2 <- sero_data_base %>%
+        ggplot(aes(x = base, y = abs, )) +
+                geom_line(aes(group = virus_isol_yr)) +
+                geom_point(aes(fill = time), shape = 21, size = 3) +
+                labs(x = "Start titre value", y = "Change in titre post-vac (abs)", fill = "Days post-vac")
+
+
+p3 <- sero_data_base_rel %>%
+        ggplot(aes(x = virus_isol_yr, y = prop * 100, )) +
+                geom_line(aes(group = virus_isol_yr)) +
+                geom_point(aes(fill = time), shape = 21, size = 3) +
+                labs(x = "Year of circulating virus", y = "Change in titre post-vac (%)", fill = "Days post-vac")
+
+p4 <- sero_data_base_rel %>%
+        ggplot(aes(x = base, y = prop * 100, )) +
+                geom_line(aes(group = virus_isol_yr)) +
+                geom_point(aes(fill = time), shape = 21, size = 3) +
+                labs(x = "Start titre value", y = "Change in titre post-vac (%)", fill = "Days post-vac")
+
+(p1 + p2) / (p3 + p4) + plot_layout(guides = "collect")
+ggsave(file = here::here("outputs", "hanam", "analysis", "figs", "figB.pdf"))
+
+```

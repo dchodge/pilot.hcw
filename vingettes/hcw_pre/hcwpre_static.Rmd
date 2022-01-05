@@ -3,7 +3,7 @@
 #
 ```{r}
 
-makeclass()
+makeclass_hcwpre()
 
 ```
 
@@ -63,11 +63,29 @@ sero_data <- hcwpre$sero_data
 sum_data <- sero_data %>% group_by(sample_time, titre_value) %>% summarise(n = n()) 
 weighted_sum_data <- sum_data %>% summarise(w_mean = weighted.mean(titre_value, n, na.rm = TRUE))
  
-ggplot() +
+plot_data1 <- sero_data %>% group_by(virus_isol_yr, sample_time) %>%
+        summarise(titre_value = mean(titre_value)) %>%
+        mutate(sample_time = factor(as.character(sample_time), levels = unique(as.character(sample_time)))) %>%
+        filter(virus_isol_yr < 2016)
+
+p1 <- plot_data1 %>%
+        ggplot() + 
+                geom_line(aes(x = virus_isol_yr, y = titre_value, color = sample_time), size = 1) +
+                geom_point(aes(x = virus_isol_yr, y = titre_value, fill = sample_time), shape = 21, size = 3) + 
+                labs(x = "Year of circulating virus", y = "Titre value", fill = "Time post-vac") + 
+                scale_fill_manual(values = c("gray", "red", "pink")) + 
+                scale_color_manual(values = c("gray", "red", "pink"))
+
+
+
+p2 <- ggplot() +
         geom_point(data = sum_data, aes(x = sample_time, y = titre_value, size = n), fill = "black", alpha = 0.5) +
         geom_line(data = weighted_sum_data, aes(x = sample_time, y = w_mean), color = "red", size = 1) +
         geom_point(data = weighted_sum_data, aes(x = sample_time, y = w_mean), shape = 21, fill = "red", size = 5) + 
-        labs(x = "Time post vaccination", y = "Titre value", size = "Number of samples")
+        labs(x = "Time post vaccination", y = "Titre value", size = "Number of samples") 
+
+p1 / p2
+ggsave(file = here::here("outputs", "hcw_pre", "analysis", "figs", "figA.pdf"))
 
 ```
 
@@ -75,29 +93,52 @@ ggplot() +
 
 ```{r}
 
+
 sero_data_base <- sero_data %>% 
+        group_by(virus_isol_yr, sample_time) %>%
+        summarise(titre_mean = mean(titre_value, rm.na = TRUE)) %>%
+        pivot_wider(names_from = sample_time, values_from = titre_mean) %>%
+        mutate(day30 = (`30` - `0`), day180 = (`180` - `0`) ) %>%
+        select(virus_isol_yr, base = `0`, day30, day180) %>%
+        pivot_longer(c(day30, day180), names_to = "time", values_to = "abs") %>%
+        mutate(time = case_when(time == "day30"~"30", time == "day180"~"180"))
+
+sero_data_base_rel <- sero_data %>% 
         group_by(virus_isol_yr, sample_time) %>%
         summarise(titre_mean = mean(titre_value, rm.na = TRUE)) %>%
          pivot_wider(names_from = sample_time, values_from = titre_mean) %>%
         mutate(day30_change = (`30` - `0`) / `0`, day180_change = (`180` - `0`) / `0`) %>%
-    #    mutate(day30_change = (`30`), day180_change = `180` ) %>%
         select(virus_isol_yr, base = `0`, day30_change, day180_change) %>%
         pivot_longer(c(day30_change, day180_change), names_to = "time", values_to = "prop") %>%
         mutate(time = case_when(time == "day30_change"~"30", time == "day180_change"~"180"))
  
 p1 <- sero_data_base %>%
+        ggplot(aes(x = virus_isol_yr, y = abs, )) +
+                geom_line(aes(group = virus_isol_yr)) +
+                geom_point(aes(fill = time), shape = 21, size = 3) +
+                labs(x = "Year of circulating virus", y = "Change in titre post-vac (abs)", fill = "Days post-vac")
+
+p2 <- sero_data_base %>%
+        ggplot(aes(x = base, y = abs, )) +
+                geom_line(aes(group = virus_isol_yr)) +
+                geom_point(aes(fill = time), shape = 21, size = 3) +
+                labs(x = "Start titre value", y = "Change in titre post-vac (abs)", fill = "Days post-vac")
+
+
+p3 <- sero_data_base_rel %>%
         ggplot(aes(x = virus_isol_yr, y = prop * 100, )) +
                 geom_line(aes(group = virus_isol_yr)) +
                 geom_point(aes(fill = time), shape = 21, size = 3) +
                 labs(x = "Year of circulating virus", y = "Change in titre post-vac (%)", fill = "Days post-vac")
 
-p2 <- sero_data_base %>%
+p4 <- sero_data_base_rel %>%
         ggplot(aes(x = base, y = prop * 100, )) +
                 geom_line(aes(group = virus_isol_yr)) +
                 geom_point(aes(fill = time), shape = 21, size = 3) +
                 labs(x = "Start titre value", y = "Change in titre post-vac (%)", fill = "Days post-vac")
 
-p1 / p2
+(p1 + p2) / (p3 + p4) + plot_layout(guides = "collect")
+ggsave(file = here::here("outputs", "hcw_pre", "analysis", "figs", "figB.pdf"))
 
 ```
 

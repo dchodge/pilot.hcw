@@ -100,11 +100,11 @@ y <- get_titre_predictions(chain = chain_short,
                         )
 
 plot_infection_histories_long(
-                        chain = chain,
+                        chain = chain_short,
                         infection_histories = infection_histories,
                         vaccination_histories = vaccination_histories,
                         titre_dat = titre_dat,
-                        individuals = 10:15,
+                        individuals = 34,
                         antigenic_map = antigenic_map,
                         strain_isolation_times = strain_isolation_times,
                         par_tab = par_tab,
@@ -159,7 +159,8 @@ y <- get_titre_predictions(
     strain_isolation_times = strain_isolation_times,
     par_tab = par_tab,
     custom_ab_kin_func = custom_ab_kin_func,
-    custom_antigenic_maps_func = custom_antigenic_maps_func
+    custom_antigenic_maps_func = custom_antigenic_maps_func,
+    nsamp = 100
 )
 
 plot_infection_histories_long(
@@ -167,7 +168,7 @@ plot_infection_histories_long(
     infection_histories = infection_histories,
     vaccination_histories = vaccination_histories,
     titre_dat = titre_dat,
-    individuals = 5,
+    individuals = 21,
     antigenic_map = antigenic_map,
     strain_isolation_times = strain_isolation_times,
     par_tab = par_tab,
@@ -178,6 +179,26 @@ plot_infection_histories_long(
 chain_full$mu_vac %>% mean
 chain_full$mu_short_vac %>% mean
 
+
+```
+
+
+```{r}
+
+sum_data <- titre_dat %>% group_by(sample_time, titre) %>% summarise(n = n()) 
+weighted_sum_data <- sum_data %>% summarise(w_mean = weighted.mean(titre, n, na.rm = TRUE))
+
+#predictions
+titre_pred <- y$predicted_observations
+titre_pred <- titre_pred %>% filter(virus == 24192)
+
+titre_pred %>% select(virus, samples, titre, median) 
+
+sum_data <- titre_pred %>% group_by(sample_time, titre) %>% summarise(n = n()) 
+weighted_sum_data <- sum_data %>% summarise(w_mean = weighted.mean(titre, n, na.rm = TRUE))
+
+sum_pred <- titre_pred %>% group_by(sample_time, median) %>% summarise(n = n()) 
+weighted_sum_pred <- sum_pred %>% summarise(w_mean = weighted.mean(median, n, na.rm = TRUE))
 
 ```
 

@@ -38,7 +38,36 @@ import_hcw_pre <- function() {
     save(hcw_pre_sero_data, file = here::here("data", "hcw_pre", "sero_data.RDS"))
 }
 
-makeclass <- function() { 
+import_hanam <- function() {
+    hanam_data_raw <- read_excel(here::here("inst", "extdata", "hanam_data.xlsx"))
+
+    # get part info
+    hanam_part_data <- hanam_data_raw %>%
+        select(pid = Subject_ID, dob = DoBS, age = Age, gender = SexS) %>%
+        mutate(age = round(age, 0), dob = ymd(dob), yob = year(dob))
+    hanam_part_data$gender <- factor(hanam_part_data$gender, levels = c("Male", "Female"))
+    save(hanam_part_data, file = here::here("data", "hanam", "part_data.RDS"))
+
+    # 
+    hanam_sero_data <- hanam_data_raw %>%
+        select(pid = Subject_ID, virus_id = virus, virus_name = Short_Name,
+            virus_isol_yr = Year, titre_value = L2titre, d4Diff, d7Diff, d14Diff, d21Diff, d280Diff) %>%
+        group_by(pid, virus_name) %>%
+        mutate(d0Diff = c(0, rep(NA, n() - 1)), .after = titre_value) %>%
+        pivot_longer(c(d0Diff, d4Diff, d7Diff, d14Diff, d21Diff, d280Diff), names_to = "sample_time", values_to = "not") %>%
+        na.omit %>%
+        mutate(sample_time = case_when(
+                sample_time == "d0Diff"~0,
+                sample_time == "d4Diff"~4,
+                sample_time == "d7Diff"~7,
+                sample_time == "d14Diff"~14,
+                sample_time == "d21Diff"~21,
+                sample_time == "d280Diff"~280)) %>%
+        select(!not) %>% select(pid, virus_id, virus_name, virus_isol_yr, sample_time, titre_value)
+     save(hanam_sero_data, file = here::here("data", "hanam", "sero_data.RDS"))
+}
+
+makeclass_hcwpre <- function() { 
     import_hcw_pre()
 
     load(here::here("data", "hcw_pre", "part_data.RDS"))
@@ -52,4 +81,19 @@ makeclass <- function() {
         vac_data = hcw_pre_vac_data)
     
     save(hcwpre, file = here::here("data", "hcwpre_data.RDS"))
+}
+
+
+makeclass_hanam <- function() { 
+    import_hanam()
+
+    load(here::here("data", "hanam", "part_data.RDS"))
+    load(here::here("data", "hanam", "sero_data.RDS"))
+
+    hanam <- make_study("Ha Nam study",
+        "hanam",
+        part_data = hanam_part_data,
+        sero_data = hanam_sero_data)
+    
+    save(hanam, file = here::here("data", "hanam_data.RDS"))
 }
