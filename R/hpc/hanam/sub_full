@@ -3,7 +3,15 @@
 #$ -l mem_free=4G,h_vmem=4G
 #$ -q parallel.q
 #$ -pe smp 4
+<<<<<<< HEAD
 #$ -t 1
+=======
+<<<<<<< HEAD
+#$ -t 2
+=======
+#$ -t 1
+>>>>>>> 418e98c3cfcb569d0d803ab7f898932712d6affa
+>>>>>>> 94e96f5e2a85087c694677fff34ac5732ae0bf9d
 
 module load R/4.0.3
 module load gcc/6.5.0
