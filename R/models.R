@@ -16,7 +16,7 @@ convert_to_ss_vac <- function(short_name, sero_data, vac_data, sample_yr) {
     vac_df
 }
 
-convert_to_ss_sero <- function(shortname, sero_data, part_data, sample_yr) {
+convert_to_ss_sero_hcwpre <- function(shortname, sero_data, part_data, sample_yr) {
 
     data_b4_vac <- sero_data
     data_b4_vac <- data_b4_vac %>% left_join(unique(part_data), by = "pid")
@@ -39,6 +39,36 @@ convert_to_ss_sero <- function(shortname, sero_data, part_data, sample_yr) {
         group_by(individual, DOB, virus, samples, run, group, sample_time) %>%
         dplyr::summarise(titre = as.integer(mean(titre))) %>%
         ungroup %>% na.omit %>% as.data.frame
+}
+
+convert_to_ss_sero_hanam <- function(shortname, sero_data, part_data, sample_yr) {
+
+    data_b4_vac <- sero_data
+    part_data_alt <- unique(part_data) %>% select(pid, yob)
+    data_b4_vac <- data_b4_vac %>% left_join(unique(part_data_alt), by = "pid")
+    data_b4_vac$individual <- factor(data_b4_vac$pid, levels = unique(data_b4_vac$pid)) %>% as.integer
+
+    data_b4_vac <- data_b4_vac %>% mutate(samples =
+        case_when(
+            sample_time == 0~sample_yr,
+            sample_time == 4~sample_yr + 0.5 / 52,
+            sample_time == 7~sample_yr + 1 / 52,
+            sample_time == 14~sample_yr + 2 / 52,
+            sample_time == 21~sample_yr + 3 / 52,
+            sample_time == 280~sample_yr + 40 / 52
+        ))
+
+    data_b4_vac$virus <- data_b4_vac$virus_isol_yr
+    data_b4_vac$titre <- as.integer(round(data_b4_vac$titre_value, 0))
+    data_b4_vac$run <- as.integer(1)
+    data_b4_vac$DOB <- as.integer(data_b4_vac$yob)
+    data_b4_vac$group <- as.integer(1)
+    data_b4_vac %>% select(individual, DOB, virus, titre, samples, run, group, sample_time) %>%
+        group_by(individual, DOB, virus, samples, run, group, sample_time) %>%
+        dplyr::summarise(titre = as.integer(mean(titre))) %>%
+        ungroup %>% na.omit %>% as.data.frame
+    data_b4_vac$titre <- data_b4_vac$titre - min(data_b4_vac$titre)
+    data_b4_vac %>% filter(sample_time %in% c(0, 14, 280))
 }
 
 get_antigenic_map <- function() {
@@ -74,13 +104,14 @@ get_par_tab <- function() {
     par_tab
 }
 
-make_model_info <- function(prior_version, output_file, antigenic_map, par_tab, study, sample_yr, vacc_type, model_name, pars_plot,
+make_model_info_hcwpre <- function(prior_version, output_file, antigenic_map, par_tab, study, sample_yr, vacc_type, model_name, pars_plot,
         prior_function, custom_ab_kin_func, custom_antigenic_maps_func) { 
     
     sero_data <- study$sero_data
     part_data <- study$part_data
     vac_data <- study$vac_data
-    titre_data <- convert_to_ss_sero(study$study_name_short, sero_data, part_data, sample_yr) %>% filter(virus <= sample_yr) %>% as.data.frame
+
+    titre_data <- convert_to_ss_sero_hcwpre(study$study_name_short, sero_data, part_data, sample_yr) %>% filter(virus <= sample_yr) %>% as.data.frame
 
     if (vacc_type == "novac") {
         vac_history <- NULL
@@ -88,6 +119,55 @@ make_model_info <- function(prior_version, output_file, antigenic_map, par_tab, 
         vac_history <- convert_to_ss_vac(study$study_name_short, sero_data, vac_data, sample_yr) %>% data.frame
         vac_history <- vac_history %>% mutate(vac_flag = case_when(time == sample_yr~1, time != sample_yr~vac_flag))
         vac_history <- vac_history %>% group_by(individual) %>% mutate(prev_vac = cumsum(vac_flag)) %>% as.data.frame
+    }
+
+    antigenic_map <- antigenic_map %>% filter(inf_times <= sample_yr)
+    antigenic_map <- antigenic_map[antigenic_map$inf_times >= min(titre_data$virus) & antigenic_map$inf_times <= max(titre_data$virus), ]
+    strain_isolation_times <- unique(antigenic_map$inf_times)
+    ## Maximum recordable log titre in these data is 8
+    par_tab[par_tab$names == "MAX_TITRE", "values"] <- max(titre_data$titre)
+    
+    vaccination_histories_mat <- make_vac_matrix(vac_history, titre_data, strain_isolation_times)
+
+    create_post <- list(par_tab = par_tab,
+        vac_history = vac_history,
+        vaccination_histories_mat = vaccination_histories_mat,
+        titre_data = titre_data,
+        antigenic_map = antigenic_map,
+        strain_isolation_times = strain_isolation_times,
+        prior_version = prior_version
+    )
+
+    others <- list(sample_yr = sample_yr, study = study, output_file = output_file, model_name = model_name,
+        pars_plot = pars_plot)
+    
+    list(create_post = create_post, others = others, prior_function = prior_function,
+        custom_ab_kin_func = custom_ab_kin_func, custom_antigenic_maps_func = custom_antigenic_maps_func)
+}
+
+
+make_model_info_hanam <- function(prior_version, output_file, antigenic_map, par_tab, study, sample_yr, vacc_type, model_name, pars_plot,
+        prior_function, custom_ab_kin_func, custom_antigenic_maps_func) { 
+    
+    sero_data <- study$sero_data
+    part_data <- study$part_data
+    vac_data <- study$vac_data
+
+    titre_data <- convert_to_ss_sero_hanam(study$study_name_short, sero_data, part_data, sample_yr) %>% filter(virus <= sample_yr) %>% as.data.frame
+
+    if (vacc_type == "novac") {
+        vac_history <- NULL
+    } else {
+        sit <- unique(antigenic_map$inf_times)
+        vac_history_pre <- data.frame(
+            individual = 1:length(unique(sero_data$pid)),
+            virus = sample_yr,
+            time = sample_yr,
+            vac_flag = 1
+        )
+
+        vac_history <- vac_history_pre  %>% complete(individual, nesting(virus = sit, time = sit), fill = list(vac_flag = 0)) %>% as.data.frame
+        vac_history <- vac_history %>% group_by(individual) %>% mutate(prev_vac = cumsum(vac_flag)) %>% filter(time <= sample_yr)
     }
 
     antigenic_map <- antigenic_map %>% filter(inf_times <= sample_yr)

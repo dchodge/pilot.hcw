@@ -1,0 +1,10 @@
+#!/bin/bash
+#$ -cwd -V
+#$ -l mem_free=4G,h_vmem=4G
+#$ -q parallel.q
+#$ -pe smp 4
+#$ -t 1
+
+module load R/4.0.3
+module load gcc/6.5.0
+R CMD BATCH dis_dep_cross.R output_${SGE_TASK_ID}.out
