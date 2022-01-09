@@ -685,7 +685,7 @@ void ab_kin_vac_general(
             time = sampling_time - vaccination_times[x_vac]; // Time vaccination
             wane_amount_vac = MAX(0, 1.0 - wane_vac * time); // Basic waning function
 
-            seniority = MAX(0, 1.0 - tau*(n_inf - 1.0)); // Antigenic seniority
+            seniority = MAX(0, 1.0 - tau * (n_inf - 1.0)); // Antigenic seniority
             
             vac_map_index = vaccination_strain_indices_tmp[x_vac]; // Index of this vaccinating strain in antigenic map
             for (int k = 0; k < n_titres; ++k) { 

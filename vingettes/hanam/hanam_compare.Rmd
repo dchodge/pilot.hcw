@@ -1,0 +1,250 @@
+
+```{r}
+
+library(latex2exp)
+library(patchwork)
+library(here)
+require(plyr)
+require(data.table)
+require(tidyverse)
+library(devtools)
+library(loo)
+# Required for this analysis
+require(reshape2)
+require(foreach)
+require(doParallel)
+require(bayesplot)
+require(coda)
+require(ggplot2)
+require(viridis)
+require(ggpubr)
+library(mvoutlier)
+
+require(foreach)
+require(doParallel)
+require(Rcpp)
+
+require(extrafont)
+require(showtext)
+font_add("Avenir", "/Users/davidhodgson/Documents/personal/fonts/avenir_ff/AvenirLTStd-Book.otf")  
+showtext_auto()
+theme_set(theme_light())
+library(wesanderson)
+
+```
+
+
+# Load packages and data
+Currently using the serosolver 
+```{r}
+
+
+#install_github("https://github.com/dchodge/serosolver", ref = "custom_ab")
+#install("/Users/davidhodgson/Documents/research/flu/serosolver_vac")
+#install(here::here("rcppfunchcw"))
+
+devtools::load_all()
+require(serosolver)
+require(rcppfunchcw)
+ 
+load(here::here("data", "hanam_data.RDS")) # hcwpre
+
+
+
+```
+
+
+
+# Plot sensible things
+
+```{r}
+
+load(file = here::here("data", paste0("modelinfo_cross_", hanam$study_name_short, ".RDS"))) #all_models_hcw_pre_cross
+load(file = here::here("outputs", "hanam", "fits", "dis_dep", "full", "trimmed_post_full.Rdata"))
+all_post_test_full <- post_cross$post_raw
+
+chain_short <- as.data.frame(all_post_test_full$theta_chain) %>% filter(chain_no == 1)
+infection_histories <- all_post_test_full$inf_chain %>% filter(chain_no == 1)
+titre_dat <- all_models_hanam_cross[[2]]$create_post$titre_data
+vaccination_histories <- all_models_hanam_cross[[2]]$create_post$vaccination_histories
+
+antigenic_map <- all_models_hanam_cross[[2]]$create_post$antigenic_map
+strain_isolation_times <-  all_models_hanam_cross[[2]]$create_post$strain_isolation_times
+par_tab <- all_models_hanam_cross[[2]]$create_post$par_tab
+
+vaccination_histories <- all_models_hanam_cross[[2]]$create_post$vac_history
+custom_ab_kin_func <- all_models_hanam_cross[[2]]$custom_ab_kin_func
+custom_ab_kin_func_1 <- all_models_hanam_cross[[2]]$custom_ab_kin_func
+
+custom_antigenic_maps_func <- all_models_hanam_cross[[2]]$custom_antigenic_maps_func
+
+expand_titredat <- FALSE
+nsamp <- 100
+titre_before_infection <- FALSE
+measurement_indices_by_time <- NULL
+individuals <- unique(titre_dat$individual)
+mu_indices <- NULL
+
+y <- get_titre_predictions(chain = chain_short,
+                        infection_histories = infection_histories,
+                        vaccination_histories = vaccination_histories,
+                        titre_dat = titre_dat,
+                        individuals = 1:49,
+                        antigenic_map = antigenic_map,
+                        strain_isolation_times = strain_isolation_times,
+                        par_tab = par_tab,
+                        custom_ab_kin_func = custom_ab_kin_func,
+                        custom_antigenic_maps_func = custom_antigenic_maps_func
+                        )
+
+plot_infection_histories_long(
+                        chain = chain_short,
+                        infection_histories = infection_histories,
+                        vaccination_histories = vaccination_histories,
+                        titre_dat = titre_dat,
+                        individuals = 1,
+                        antigenic_map = antigenic_map,
+                        strain_isolation_times = strain_isolation_times,
+                        par_tab = par_tab,
+                        custom_ab_kin_func = custom_ab_kin_func,
+                        custom_antigenic_maps_func = custom_antigenic_maps_func)
+
+
+```
+
+
+```{r}
+
+
+
+load(file = here::here("data", paste0("modelinfo_full_", hcwpre$study_name_short, ".RDS"))) #all_models_hcw_pre_cross
+load(file = here::here("outputs", "hcw_pre", "fits", "dis_dep", "full", "trimmed_post_full.Rdata"))
+
+pos <- 5
+
+all_post_test_full <- post_full$post_raw
+chain_full <- as.data.frame(all_post_test_full[[pos]]$theta_chain) %>% filter(chain_no == 1)
+infection_histories <- all_post_test_full[[pos]]$inf_chain %>% filter(chain_no == 1)
+titre_dat <- all_models_hcw_pre_full[[pos]]$create_post$titre_data 
+vaccination_histories <- all_models_hcw_pre_full[[pos]]$create_post$vaccination_histories
+
+antigenic_map <- all_models_hcw_pre_full[[pos]]$create_post$antigenic_map
+strain_isolation_times <-  all_models_hcw_pre_full[[pos]]$create_post$strain_isolation_times
+par_tab <- all_models_hcw_pre_full[[pos]]$create_post$par_tab
+
+vaccination_histories <- all_models_hcw_pre_full[[pos]]$create_post$vac_history
+custom_ab_kin_func <- all_models_hcw_pre_full[[pos]]$custom_ab_kin_func
+custom_ab_kin_func_1 <- all_models_hcw_pre_full[[pos]]$custom_ab_kin_func
+
+custom_antigenic_maps_func <- all_models_hcw_pre_full[[pos]]$custom_antigenic_maps_func
+
+expand_titredat <- FALSE
+nsamp <- 100
+titre_before_infection <- FALSE
+measurement_indices_by_time <- NULL
+individuals <- unique(titre_dat$individual)
+mu_indices <- NULL
+
+chain_full <- chain_full %>% filter(sampno > 300000)
+
+y <- get_titre_predictions(
+    chain = chain_full,
+    infection_histories = infection_histories,
+    vaccination_histories = vaccination_histories,
+    titre_dat = titre_dat,
+    individuals = 1:49,
+    antigenic_map = antigenic_map,
+    strain_isolation_times = strain_isolation_times,
+    par_tab = par_tab,
+    custom_ab_kin_func = custom_ab_kin_func,
+    custom_antigenic_maps_func = custom_antigenic_maps_func,
+    nsamp = 100
+)
+
+plot_infection_histories_long(
+    chain = chain_full,
+    infection_histories = infection_histories,
+    vaccination_histories = vaccination_histories,
+    titre_dat = titre_dat,
+    individuals = 21,
+    antigenic_map = antigenic_map,
+    strain_isolation_times = strain_isolation_times,
+    par_tab = par_tab,
+    custom_ab_kin_func = custom_ab_kin_func,
+    custom_antigenic_maps_func = custom_antigenic_maps_func
+)
+
+chain_full$mu_vac %>% mean
+chain_full$mu_short_vac %>% mean
+
+
+```
+
+
+```{r}
+
+sum_data <- titre_dat %>% group_by(sample_time, titre) %>% summarise(n = n()) 
+weighted_sum_data <- sum_data %>% summarise(w_mean = weighted.mean(titre, n, na.rm = TRUE))
+
+#predictions
+titre_pred <- y$predicted_observations
+titre_pred <- titre_pred %>% filter(virus == 24192)
+
+titre_pred %>% select(virus, samples, titre, median) 
+
+sum_data <- titre_pred %>% group_by(sample_time, titre) %>% summarise(n = n()) 
+weighted_sum_data <- sum_data %>% summarise(w_mean = weighted.mean(titre, n, na.rm = TRUE))
+
+sum_pred <- titre_pred %>% group_by(sample_time, median) %>% summarise(n = n()) 
+weighted_sum_pred <- sum_pred %>% summarise(w_mean = weighted.mean(median, n, na.rm = TRUE))
+
+```
+
+
+# Post plots 
+
+```{r}
+
+all_post_test_full_trim <- post_full$post_trim
+postplots_long <- all_post_test_full_trim[[5]] %>% bind_rows
+dec <- 1:12 %>% map(~
+    (postplots_long[["mu_short_vac"]] * (1.0 - ((1 / 12 + postplots_long[["wane_vac"]]) * .x )))
+) 
+
+df_dec <- dec %>% setNames(as.character(c(1:12))) %>%
+    as.data.frame %>% pivot_longer(c(1:12), values_to = "titre", names_to = "time") %>%
+    mutate(time = str_extract(time, "[0-9,.]+")) %>%
+    mutate(time = factor(time, levels = as.character(c(1:12))))
+df_dec <- df_dec[df_dec$titre > 0, ]
+
+sero_data <- hcwpre$sero_data
+sum_data <- sero_data %>% group_by(sample_time, titre_value) %>% summarise(n = n()) 
+weighted_sum_data <- sum_data %>% summarise(w_mean = weighted.mean(titre_value, n, na.rm = TRUE)) %>%
+    mutate(sample_time = sample_time / 30)
+ 
+ggplot() +
+        geom_point(data = sum_data, aes(x = sample_time, y = titre_value, size = n), fill = "black", alpha = 0.5) +
+        geom_line(data = weighted_sum_data, aes(x = sample_time, y = w_mean), color = "red", size = 1) +
+        geom_point(data = weighted_sum_data, aes(x = sample_time, y = w_mean), shape = 21, fill = "red", size = 5) + 
+        labs(x = "Time post vaccination", y = "Titre value", size = "Number of samples")
+
+df_dec %>%
+    ggplot() + 
+        geom_boxplot(aes(x = time, y = titre)) +
+        labs(x = "Months post vaccination") +
+        geom_point(data = weighted_sum_data, aes(x = sample_time, y = w_mean), shape = 8, color = "red", size = 5) +
+        geom_hline(yintercept = postplots_long[["mu"]] * postplots_long[["mu_vac"]] %>% mean)
+
+```
+
+
+```{r}
+
+antigenic_map_melted <- c(melt_antigenic_coords(antigenic_map[, c("x_coord", "y_coord")]))
+
+chain$sigma1 %>% mean
+s <- 0.01
+lapply(antigenic_map_melted, function(x) max(1 - x * s, 0)) %>% unlist
+
+
+```

@@ -49,7 +49,7 @@ require(serosolver)
 
 devtools::load_all()
 load(here::here("data", "hanam_data.RDS"))
-get_model_info_hcw_pre(hcwpre)
+get_model_info_hanam(hanam)
 
 ````
 
