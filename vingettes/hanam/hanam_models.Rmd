@@ -157,8 +157,8 @@ plot_titre_post(all_post_test_cross_hanam, all_models_hanam_cross[[1]], file = "
 
 load(file = here::here("data", paste0("modelinfo_cross_", hanam$study_name_short, ".RDS"))) #all_models_hcw_pre_cross
 
-    
-all_post_test_cross_hanam <- load_mcmc_post(all_models_hanam_cross[[2]],
+all_post_test_cross_hanam <- load_mcmc_post(
+    all_models_hanam_cross[[2]],
     fit_place = "local",
     folder_name_1 = "dis_dep",
     cross_sectional = FALSE,

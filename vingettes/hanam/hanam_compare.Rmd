@@ -97,17 +97,19 @@ y <- get_titre_predictions(chain = chain_short,
                         custom_antigenic_maps_func = custom_antigenic_maps_func
                         )
 
+
 plot_infection_histories_long(
                         chain = chain_short,
                         infection_histories = infection_histories,
                         vaccination_histories = vaccination_histories,
                         titre_dat = titre_dat,
-                        individuals = 1,
+                        individuals = 4:6,
                         antigenic_map = antigenic_map,
                         strain_isolation_times = strain_isolation_times,
                         par_tab = par_tab,
                         custom_ab_kin_func = custom_ab_kin_func,
-                        custom_antigenic_maps_func = custom_antigenic_maps_func)
+                        custom_antigenic_maps_func = custom_antigenic_maps_func,
+                        size_plot = 25)
 
 
 ```
