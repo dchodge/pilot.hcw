@@ -56,6 +56,18 @@ get_model_info_hanam(hanam)
 # install new custom_ab functions
 ```{r}
 
+load(file = here::here("data", paste0("modelinfo_cross_", hanam$study_name_short, ".RDS"))) #all_models_hcw_pre_cross
+
+setup_run_serosolver(
+    all_models_hanam[[3]],
+    chains = 4,
+    iterations = 1000000,
+    pt = TRUE,
+    filename = "dis_dep",
+    cross_sectional = FALSE,
+    continue_run = FALSE)
+)
+
 
 ```
 
@@ -74,15 +86,6 @@ setup_run_serosolver(
     continue_run = FALSE)
 )
 
-setup_run_serosolver(
-    all_models_hanam_cross[[2]],
-    chains = 4,
-    iterations = 1000000,
-    pt = TRUE,
-    filename = "dis_dep",
-    cross_sectional = FALSE,
-    continue_run = FALSE)
-)
 
 #load(file = here::here("data", paste0("modelinfo_full_", hcwpre$study_name_short, ".RDS"))) #all_models_hcw_pre_full
 #5 %>% map(~setup_run_serosolver(

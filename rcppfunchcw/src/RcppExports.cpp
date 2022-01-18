@@ -78,6 +78,23 @@ BEGIN_RCPP
     return R_NilValue;
 END_RCPP
 }
+// ab_kin_vac_log_normal
+void ab_kin_vac_log_normal(NumericVector& predicted_titres, const NumericVector& theta, const List& infection_info, const List& vaccination_info, const List& setup_data, const List& indexing, const List& antigenic_maps, const List& other_pars);
+RcppExport SEXP _rcppfunchcw_ab_kin_vac_log_normal(SEXP predicted_titresSEXP, SEXP thetaSEXP, SEXP infection_infoSEXP, SEXP vaccination_infoSEXP, SEXP setup_dataSEXP, SEXP indexingSEXP, SEXP antigenic_mapsSEXP, SEXP other_parsSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector& >::type predicted_titres(predicted_titresSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type theta(thetaSEXP);
+    Rcpp::traits::input_parameter< const List& >::type infection_info(infection_infoSEXP);
+    Rcpp::traits::input_parameter< const List& >::type vaccination_info(vaccination_infoSEXP);
+    Rcpp::traits::input_parameter< const List& >::type setup_data(setup_dataSEXP);
+    Rcpp::traits::input_parameter< const List& >::type indexing(indexingSEXP);
+    Rcpp::traits::input_parameter< const List& >::type antigenic_maps(antigenic_mapsSEXP);
+    Rcpp::traits::input_parameter< const List& >::type other_pars(other_parsSEXP);
+    ab_kin_vac_log_normal(predicted_titres, theta, infection_info, vaccination_info, setup_data, indexing, antigenic_maps, other_pars);
+    return R_NilValue;
+END_RCPP
+}
 // ab_kin_normal_rel
 void ab_kin_normal_rel(NumericVector& predicted_titres, const NumericVector& theta, const List& infection_info, const List& vaccination_info, const List& setup_data, const List& indexing, const List& antigenic_maps, const List& other_pars);
 RcppExport SEXP _rcppfunchcw_ab_kin_normal_rel(SEXP predicted_titresSEXP, SEXP thetaSEXP, SEXP infection_infoSEXP, SEXP vaccination_infoSEXP, SEXP setup_dataSEXP, SEXP indexingSEXP, SEXP antigenic_mapsSEXP, SEXP other_parsSEXP) {
@@ -118,6 +135,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rcppfunchcw_ab_kin_vac", (DL_FUNC) &_rcppfunchcw_ab_kin_vac, 8},
     {"_rcppfunchcw_ab_kin_vac_prev_hist", (DL_FUNC) &_rcppfunchcw_ab_kin_vac_prev_hist, 8},
     {"_rcppfunchcw_ab_kin_vac_general", (DL_FUNC) &_rcppfunchcw_ab_kin_vac_general, 8},
+    {"_rcppfunchcw_ab_kin_vac_log_normal", (DL_FUNC) &_rcppfunchcw_ab_kin_vac_log_normal, 8},
     {"_rcppfunchcw_ab_kin_normal_rel", (DL_FUNC) &_rcppfunchcw_ab_kin_normal_rel, 8},
     {"_rcppfunchcw_ab_kin_vac_rel", (DL_FUNC) &_rcppfunchcw_ab_kin_vac_rel, 8},
     {NULL, NULL, 0}

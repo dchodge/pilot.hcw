@@ -68,7 +68,8 @@ convert_to_ss_sero_hanam <- function(shortname, sero_data, part_data, sample_yr)
         dplyr::summarise(titre = as.integer(mean(titre))) %>%
         ungroup %>% na.omit %>% as.data.frame
     data_b4_vac$titre <- data_b4_vac$titre - min(data_b4_vac$titre)
-    data_b4_vac %>% filter(sample_time %in% c(0, 14, 21, 280))
+    data_b4_vac %>% filter(sample_time %in% c(0, 7, 14, 21, 280))
+    data_b4_vac
 }
 
 get_antigenic_map <- function() {
