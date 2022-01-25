@@ -60,23 +60,32 @@ load(here::here("data", "hanam_data.RDS")) # hcwpre
 ```{r}
 
 load(file = here::here("data", paste0("modelinfo_cross_", hanam$study_name_short, ".RDS"))) #all_models_hcw_pre_cross
-load(file = here::here("outputs", "hanam", "fits", "dis_dep", "full", "trimmed_post_full.Rdata"))
+load(file = here::here("outputs", "hanam", "fits", "dis_dep", "full", "LN_post_full.Rdata"))
 all_post_test_full <- post_cross$post_raw
+ 
+all_post_test_full[[1]][,"mu_LN"] %>% mean
+all_post_test_full[[1]][,"sigma_LN"] %>% mean
+
+ggplot() + 
+    xlim(0, 52) + ylim(0, 1) + 
+    geom_function(fun = dlnorm, args = list(meanlog = 1.168693,  sdlog = 0.1580725))
+dlnorm(1:52, 1.168693,  0.1580725)
+
 
 chain_short <- as.data.frame(all_post_test_full$theta_chain) %>% filter(chain_no == 1)
 infection_histories <- all_post_test_full$inf_chain %>% filter(chain_no == 1)
-titre_dat <- all_models_hanam_cross[[2]]$create_post$titre_data
-vaccination_histories <- all_models_hanam_cross[[2]]$create_post$vaccination_histories
+titre_dat <- all_models_hanam[[3]]$create_post$titre_data
+vaccination_histories <- all_models_hanam[[3]]$create_post$vaccination_histories
 
-antigenic_map <- all_models_hanam_cross[[2]]$create_post$antigenic_map
-strain_isolation_times <-  all_models_hanam_cross[[2]]$create_post$strain_isolation_times
-par_tab <- all_models_hanam_cross[[2]]$create_post$par_tab
+antigenic_map <- all_models_hanam[[3]]$create_post$antigenic_map
+strain_isolation_times <-  all_models_hanam[[3]]$create_post$strain_isolation_times
+par_tab <- all_models_hanam[[3]]$create_post$par_tab
 
-vaccination_histories <- all_models_hanam_cross[[2]]$create_post$vac_history
-custom_ab_kin_func <- all_models_hanam_cross[[2]]$custom_ab_kin_func
-custom_ab_kin_func_1 <- all_models_hanam_cross[[2]]$custom_ab_kin_func
+vaccination_histories <- all_models_hanam[[3]]$create_post$vac_history
+custom_ab_kin_func <- all_models_hanam[[3]]$custom_ab_kin_func
+custom_ab_kin_func_1 <- all_models_hanam[[3]]$custom_ab_kin_func
 
-custom_antigenic_maps_func <- all_models_hanam_cross[[2]]$custom_antigenic_maps_func
+custom_antigenic_maps_func <- all_models_hanam[[3]]$custom_antigenic_maps_func
 
 expand_titredat <- FALSE
 nsamp <- 100
@@ -103,7 +112,7 @@ plot_infection_histories_long(
                         infection_histories = infection_histories,
                         vaccination_histories = vaccination_histories,
                         titre_dat = titre_dat,
-                        individuals = 4:6,
+                        individuals = 1,
                         antigenic_map = antigenic_map,
                         strain_isolation_times = strain_isolation_times,
                         par_tab = par_tab,

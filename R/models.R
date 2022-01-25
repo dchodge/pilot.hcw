@@ -113,6 +113,7 @@ make_model_info_hcwpre <- function(prior_version, output_file, antigenic_map, pa
     vac_data <- study$vac_data
 
     titre_data <- convert_to_ss_sero_hcwpre(study$study_name_short, sero_data, part_data, sample_yr) %>% filter(virus <= sample_yr) %>% as.data.frame
+    titre_data <- titre_data %>%  ungroup %>% as.data.frame %>% arrange(individual, samples)
 
     if (vacc_type == "novac") {
         vac_history <- NULL
@@ -155,6 +156,7 @@ make_model_info_hanam <- function(prior_version, output_file, antigenic_map, par
     vac_data <- study$vac_data
 
     titre_data <- convert_to_ss_sero_hanam(study$study_name_short, sero_data, part_data, sample_yr) %>% filter(virus <= sample_yr) %>% as.data.frame
+    titre_data <- titre_data %>%  ungroup %>% as.data.frame %>% arrange(individual, samples)
 
     if (vacc_type == "novac") {
         vac_history <- NULL

@@ -51,6 +51,15 @@ ab_kin_vac_log_normal <- function(predicted_titres, theta, infection_info, vacci
 #' A fast implementation of the basic boosting function, giving predicted titres for a number of samples for one individual. Note that this version attempts to minimise memory allocations.
 #' @family boosting_functions
 #' @seealso \code{\link{titre_data_fast}}
+ab_kin_vac_set_point <- function(predicted_titres, theta, infection_info, vaccination_info, setup_data, indexing, antigenic_maps, other_pars) {
+    invisible(.Call(`_rcppfunchcw_ab_kin_vac_set_point`, predicted_titres, theta, infection_info, vaccination_info, setup_data, indexing, antigenic_maps, other_pars))
+}
+
+#' Base boosting fast
+#' 
+#' A fast implementation of the basic boosting function, giving predicted titres for a number of samples for one individual. Note that this version attempts to minimise memory allocations.
+#' @family boosting_functions
+#' @seealso \code{\link{titre_data_fast}}
 ab_kin_normal_rel <- function(predicted_titres, theta, infection_info, vaccination_info, setup_data, indexing, antigenic_maps, other_pars) {
     invisible(.Call(`_rcppfunchcw_ab_kin_normal_rel`, predicted_titres, theta, infection_info, vaccination_info, setup_data, indexing, antigenic_maps, other_pars))
 }

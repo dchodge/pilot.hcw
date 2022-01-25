@@ -2,5 +2,9 @@
 
 export(make_antigenic_maps_default_n)
 export(make_antigenic_maps_vac1_n)
+export(make_antigenic_maps_vac2_n)
 importFrom(Rcpp,sourceCpp)
+importFrom(doParallel,registerDoParallel)
+importFrom(foreach,"%dopar%")
+importFrom(foreach,foreach)
 useDynLib(hcw.study)

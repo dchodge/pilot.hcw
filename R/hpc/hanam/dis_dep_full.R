@@ -10,6 +10,8 @@ library(rcppfunchcw)
 library(devtools)
 library(here)
 
+taskIdChar <- Sys.getenv("SGE_TASK_ID")
+taskIdInteger <- (as.numeric(taskIdChar))
 
 #install_github("https://github.com/dchodge/serosolver", ref = "custom_ab")
 #install(here::here("rcppfunchcw"))
@@ -19,7 +21,7 @@ load(here::here("data", "hanam_data.RDS")) # hcwpre
 load(file = here::here("data", paste0("modelinfo_cross_", hanam$study_name_short, ".RDS"))) # all_models_hcw_pre
 
 setup_run_serosolver(
-        all_models_hanam[[3]],
+        all_models_hanam[[taskIdInteger]],
         chains = 4,
         iterations = 1000000,
         pt = TRUE,

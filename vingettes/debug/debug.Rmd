@@ -1,0 +1,209 @@
+```{r}
+# Run first time
+devtools::load_all()
+require(serosolver)
+require(rcppfunchcw)
+require(cmdstanr)
+require(tidybayes)
+library(posterior)
+library(bayesplot)
+require(devtools)
+require(foreach)
+require(doParallel)
+require(Rcpp)
+
+
+library(latex2exp)
+library(patchwork)
+library(here)
+require(plyr)
+require(data.table)
+require(tidyverse)
+library(devtools)
+library(loo)
+# Required for this analysis
+require(reshape2)
+require(foreach)
+require(doParallel)
+require(bayesplot)
+require(coda)
+require(ggplot2)
+require(viridis)
+require(ggpubr)
+library(mvoutlier)
+
+require(foreach)
+require(doParallel)
+require(Rcpp)
+
+require(extrafont)
+require(showtext)
+font_add("Avenir", "/Users/davidhodgson/Documents/personal/fonts/avenir_ff/AvenirLTStd-Book.otf")  
+showtext_auto()
+theme_set(theme_light())
+library(wesanderson)
+
+
+```
+
+```{r}
+# reinstall packages
+
+
+#install("/Users/davidhodgson/Documents/research/flu/serosolver_vac")
+install(here::here("rcppfunchcw"))
+require(serosolver)
+require(rcppfunchcw)
+
+```
+
+```{r}
+
+# install
+
+devtools::load_all()
+load(here::here("data", "hanam_data.RDS")) # hanam
+get_model_info_hanam(hanam) # make hanam data
+load(file = here::here("data", paste0("modelinfo_cross_", hanam$study_name_short, ".RDS"))) #all_models_hanam
+
+##
+# Mean stuff
+##
+df_mean <- all_models_hanam[[3]]$create_post$titre_data %>%
+    ungroup %>%
+    group_by(virus_id, virus_name, virus_isol_yr, sample_time, samples, virus, run, group) %>%
+    dplyr::summarise(titre_value = mean(titre_value), titre = mean(titre))
+
+df_data_ln <- df_mean %>%
+    ungroup %>%
+    select(virus_id, sample_time, titre) %>%
+    mutate(sample_time = sample_time / 7) %>%
+    group_by(virus_id) %>%
+    mutate(titre_norm = titre - min(titre)) %>% 
+    filter(sample_time > 0) %>% 
+    mutate(indicies = row_number(sample_time))
+
+df_data_ln_sum <- df_data_ln %>% group_by(sample_time) %>% dplyr::summarise(titre_norm = mean(titre_norm))
+
+## 
+# recent strain
+##
+df_first <- all_models_hanam[[3]]$create_post$titre_data %>%
+    ungroup %>%
+    group_by(virus_id, virus_name, virus_isol_yr, sample_time, samples, virus, run, group) %>%
+    filter(virus_isol_yr == 2016) %>%
+    dplyr::summarise(titre_value = mean(titre_value), titre = mean(titre))
+
+
+df_first_ln <- df_first %>%
+    ungroup %>%
+    select(virus_id, sample_time, titre) %>%
+    mutate(sample_time = sample_time / 7) %>%
+    group_by(virus_id) %>%
+    mutate(titre_norm = titre - min(titre)) %>% 
+    filter(sample_time > 0) %>% 
+    mutate(indicies = row_number(sample_time))
+
+df_data_ln_sum <- df_first_ln %>% group_by(sample_time) %>% dplyr::summarise(titre_norm = mean(titre_norm))
+
+### 
+
+
+new_titre_data_2 <- all_models_hanam[[2]]$create_post$titre_data %>%
+    select(individual, samples, virus, titre, run, group) %>%
+    group_by(virus, samples, run, group) %>% 
+    dplyr::summarise(titre = mean(titre), individual = 1, DOB = 101816) 
+    
+new_titre_data_3 <- all_models_hanam[[3]]$create_post$titre_data %>%
+    select(individual, samples, virus, titre, run, group) %>%
+    group_by(virus, samples, run, group) %>% 
+    dplyr::summarise(titre = mean(titre), individual = 1, DOB = 101816) 
+    
+
+all_models_hanam[[2]]$create_post$titre_data  <- new_titre_data %>% ungroup %>% as.data.frame %>% arrange(individual, samples)
+all_models_hanam[[2]]$create_post$vac_history <- filter(all_models_hanam[[2]]$create_post$vac_history, individual == 1)
+all_models_hanam[[2]]$create_post$vaccination_histories_mat <- all_models_hanam[[2]]$create_post$vaccination_histories_mat[1, ]
+
+
+all_models_hanam[[3]]$create_post$titre_data  <- new_titre_data_3 %>% ungroup %>% as.data.frame %>% arrange(individual, samples)
+all_models_hanam[[3]]$create_post$vac_history <- filter(all_models_hanam[[3]]$create_post$vac_history, individual == 1)
+all_models_hanam[[3]]$create_post$vaccination_histories_mat <- all_models_hanam[[3]]$create_post$vaccination_histories_mat[1, ]
+
+setup_run_serosolver(
+    all_models_hanam[[3]],
+    chains = 4,
+    iterations = 100000,
+    pt = TRUE,
+    filename = "dis_dep",
+    cross_sectional = FALSE,
+    continue_run = FALSE) # saves
+
+```
+
+```{r}
+
+all_post_test_hanam_LN <- load_mcmc_post(
+    all_models_hanam[[2]],
+    fit_place = "local",
+    folder_name_1 = "dis_dep",
+    cross_sectional = FALSE,
+    burnin = 0,
+    thin = 1)
+
+all_post_test_hanam_SP <- load_mcmc_post(
+    all_models_hanam[[3]],
+    fit_place = "local",
+    folder_name_1 = "dis_dep",
+    cross_sectional = FALSE,
+    burnin = 0,
+    thin = 1)
+
+mu_LN_v <- all_post_test_hanam_LN[[1]][, "mu_LN"]
+sigma_LN_v <- all_post_test_hanam_LN[[1]][, "sigma_LN"]
+alpha_LN_v <- all_post_test_hanam_LN[[1]][, "alpha_LN"]
+
+th1_SP_v <- all_post_test_hanam_SP[[1]][, "th1_SP"]
+th2_SP_v <- all_post_test_hanam_SP[[1]][, "th2_SP"]
+th3_SP_v <- all_post_test_hanam_SP[[1]][, "th3_SP"]
+alpha_SP_v <- all_post_test_hanam_SP[[1]][, "alpha_SP"]
+
+
+```
+
+```{r}
+
+plot_traces(all_post_test_hanam_LN, all_models_hanam[[2]], file = "dis_dep/full")
+plot_histogram(all_post_test_hanam_LN, all_models_hanam[[2]], file = "dis_dep/full")
+plot_titre_post(all_post_test_hanam_LN, all_models_hanam[[2]], file = "dis_dep/full")
+
+plot_traces(all_post_test_hanam_SP, all_models_hanam[[3]], file = "dis_dep/full")
+plot_histogram(all_post_test_hanam_SP, all_models_hanam[[3]], file = "dis_dep/full")
+plot_titre_post(all_post_test_hanam_SP, all_models_hanam[[3]], file = "dis_dep/full")
+
+
+new_titre_data %>% filter(virus == 52*2016)
+
+fn_ln <- function(x, mu, sigma, alpha) alpha * dlnorm(x, mu, sigma)
+ggplot() + 
+    xlim(0, 52) + 
+    lapply(500:525,
+        function(x) geom_function(fun = fn_ln, args = list(mu = mu_LN_v[x], sigma =  sigma_LN_v[x], alpha = alpha_LN_v[x]), color = "red", alpha = 0.5, size = 0.1)
+     ) + 
+    geom_line(data = df_first_ln, aes(x = sample_time, y = titre_norm, group = virus_id), alpha = 0.8, size = 0.1) +
+    geom_point(data = df_first_ln, aes(x = sample_time, y = titre_norm), alpha = 0.8, size = 4, color = "blue")
+
+
+boost_to_set_point <- function(x, th1, th2, th3, alpha) {
+    alpha * (th3 / (th2 + th3) * (1- exp(-(th2 + th3)* x)) - (th1 - th3) / (th1 - th2 - th3) * (exp(-th1 * x) - exp(- (th2 + th3) * x)))
+}
+
+ggplot() + 
+    xlim(0, 52) + 
+    lapply(500:525,
+        function(x) geom_function(fun = boost_to_set_point, args = list(th1 = th1_SP_v[x], th2 = th2_SP_v[x], th3 = th3_SP_v[x], alpha = alpha_SP_v[x]), color = "red", alpha = 0.5, size = 0.1)
+     ) + 
+    geom_line(data = df_first_ln, aes(x = sample_time, y = titre_norm, group = virus_id), alpha = 0.8, size = 0.1) +
+    geom_point(data = df_first_ln, aes(x = sample_time, y = titre_norm), alpha = 0.8, size = 4, color = "blue")
+
+
+```

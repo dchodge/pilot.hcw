@@ -48,7 +48,7 @@ setup_run_serosolver <- function(
                                     # function in post
     ## Not all random starting conditions return finite likelihood, so for each chain generate random
     ## conditions until we get one with a finite likelihood#
-   # for (f in filenames) {
+  # for (f in filenames) {
   # for (f in filenames) {
     res <- foreach(f = filenames, .packages = c('rcppfunchcw', 'magrittr', 'serosolver', 'tidyr', 'data.table', 'plyr', 'dplyr')) %dopar% {
 
@@ -62,7 +62,14 @@ setup_run_serosolver <- function(
             ## Generate starting infection history
             start_inf <- setup_infection_histories_titre(model_info$create_post$titre_data,
                                                         model_info$create_post$strain_isolation_times,
-                                                        space = 3, titre_cutoff = 5) # 50 x XX
+                                                        space = 3, titre_cutoff = 3) # 
+            while (sum(start_inf) == 0) {
+              warning("Sum of start_inf is 0, resampling")
+              start_inf <- setup_infection_histories_titre(model_info$create_post$titre_data,
+                                                        model_info$create_post$strain_isolation_times,
+                                                        space = 3, titre_cutoff = 3) # 
+            }
+  
             start_prob <- sum(model_func(start_tab$values, start_inf)[[1]])
         }
         if (pt) {
@@ -87,7 +94,6 @@ setup_run_serosolver <- function(
           res <- run_MCMC(par_tab = start_tab,
                                   titre_dat = model_info$create_post$titre_data,
                                   vaccination_histories = model_info$create_post$vac_history,
-                                  vaccination_histories_mat = model_info$create_post$vaccination_histories_mat,
                                   antigenic_map = model_info$create_post$antigenic_map,
                                   start_inf_hist = start_inf,
                                   mcmc_pars = list("iterations"=2000,"popt"=0.44,"popt_hist"=0.44,
@@ -100,7 +106,9 @@ setup_run_serosolver <- function(
                                   CREATE_POSTERIOR_FUNC = create_posterior_func,
                                   CREATE_PRIOR_FUNC = prior_on_mu_vac,
                                   version = model_info$create_post$prior_version,
-                                  continue_run = continue_run)
+                                  continue_run = continue_run,
+                                  custom_ab_kin_func = model_info$custom_ab_kin_func,
+                                  custom_antigenic_maps_func = model_info$custom_antigenic_maps_func)
         }
   }
 
