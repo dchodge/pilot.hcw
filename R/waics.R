@@ -24,7 +24,7 @@ load_point_ll <- function(model_info, folder_name_1, cross_sec = TRUE, burnin = 
     ll_point_mat
 }
 
-save_plot_waic_cross <- function(all_models_hcw_pre_cross, file.path = "dis_dep", cross_sec = TRUE) {
+save_plot_waic_cross_hcwpre <- function(all_models_hcw_pre_cross, file.path = "dis_dep", cross_sec = TRUE) {
     waics <- vector(mode = "list", length = length(all_models_hcw_pre_cross))
     for (i in 1:length(all_models_hcw_pre_cross)) {
         model_info <- all_models_hcw_pre_cross[[i]]
@@ -53,6 +53,40 @@ save_plot_waic_cross <- function(all_models_hcw_pre_cross, file.path = "dis_dep"
 
     ggsave(filename = here::here("outputs", "hcw_pre", "fits",  file.path, file.path.2,  "sum_figs", "waics.pdf"))
 }
+
+
+save_plot_waic_cross_hanam <- function(all_models_hcw_pre_cross, file.path = "dis_dep", cross_sec = TRUE) {
+    waics <- vector(mode = "list", length = length(all_models_hcw_pre_cross))
+    for (i in 1:length(all_models_hcw_pre_cross)) {
+        model_info <- all_models_hcw_pre_cross[[i]]
+        ll_point_mat <- load_point_ll(model_info, file.path, cross_sec, burnin = TRUE)
+        waics[[i]] <- waic(ll_point_mat)
+    }
+
+    if (cross_sec) {
+        file.path.2 <- "cross_sec"
+    } else {
+        file.path.2 <- "full"
+    }
+
+    save(waics, file =  here::here("outputs", "hanam", "fits", file.path, file.path.2, "sum_figs", "waics.RDS"))
+
+    data.frame(
+        y = 1:2,
+        name = c("vac_LN", "vac_SP"),
+        waic_mean = waics %>% map(~.x$estimates[3, 1]) %>% unlist,
+        waic_sd = waics %>% map(~.x$estimates[3, 2]) %>% unlist
+    ) %>% 
+        ggplot(aes(y = name)) + 
+            geom_linerange(aes(xmax = waic_mean + 2 * waic_sd, xmin = waic_mean - 2 * waic_sd)) + 
+            geom_point(aes(x = waic_mean), shape = 21, size = 3, fill = "red", color = "black") + 
+            labs(x = "WAIC", y = "Model structure")
+
+    ggsave(filename = here::here("outputs", "hanam", "fits",  file.path, file.path.2,  "sum_figs", "waics.pdf"))
+}
+
+
+
 
 save_plot_waic_full <- function(all_models_hcw_pre_cross, file.path = "dis_dep", cross_sec = TRUE) {
     waics <- vector(mode = "list", length = length(all_models_hcw_pre_cross))

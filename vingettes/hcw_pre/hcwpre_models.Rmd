@@ -85,11 +85,12 @@ load(file = here::here("data", paste0("modelinfo_cross_", hcwpre$study_name_shor
     continue_run = FALSE)
 )
 
+
 load(file = here::here("data", paste0("modelinfo_full_", hcwpre$study_name_short, ".RDS"))) #all_models_hcw_pre_full
 1 %>% map(~setup_run_serosolver(
     all_models_hcw_pre_full[[.x]],
     chains = 4,
-    iterations = 1000000,
+    iterations = 50000,
     pt = TRUE,
     filename = "dis_dep",
     cross_sectional = FALSE,
@@ -155,7 +156,7 @@ mpsrf_df <- purrr::map2(all_post_test_cross_trim[2:9], all_models_hcw_pre_cross[
 save_plot_mpsrf_cross(mpsrf_df, all_models_hcw_pre_cross[[1]], file = "dis_dep/cross_sec")
 
 # Plots the waics for the models and compare
-save_plot_waic_cross(all_models_hcw_pre_cross, file = "dis_dep")
+save_plot_waic_cross_hcwpre(all_models_hcw_pre_cross, file = "dis_dep")
 
 ```
 

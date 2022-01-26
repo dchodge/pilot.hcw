@@ -24,8 +24,8 @@ ab_kin_vac <- function(predicted_titres, theta, infection_info, vaccination_info
 #' A fast implementation of the basic boosting function, giving predicted titres for a number of samples for one individual. Note that this version attempts to minimise memory allocations.
 #' @family boosting_functions
 #' @seealso \code{\link{titre_data_fast}}
-ab_kin_vac_prev_hist <- function(predicted_titres, theta, infection_info, vaccination_info, setup_data, indexing, antigenic_maps, other_pars) {
-    invisible(.Call(`_rcppfunchcw_ab_kin_vac_prev_hist`, predicted_titres, theta, infection_info, vaccination_info, setup_data, indexing, antigenic_maps, other_pars))
+ab_kin_vac_general <- function(predicted_titres, theta, infection_info, vaccination_info, setup_data, indexing, antigenic_maps, other_pars) {
+    invisible(.Call(`_rcppfunchcw_ab_kin_vac_general`, predicted_titres, theta, infection_info, vaccination_info, setup_data, indexing, antigenic_maps, other_pars))
 }
 
 #' Base boosting fast
@@ -33,8 +33,8 @@ ab_kin_vac_prev_hist <- function(predicted_titres, theta, infection_info, vaccin
 #' A fast implementation of the basic boosting function, giving predicted titres for a number of samples for one individual. Note that this version attempts to minimise memory allocations.
 #' @family boosting_functions
 #' @seealso \code{\link{titre_data_fast}}
-ab_kin_vac_general <- function(predicted_titres, theta, infection_info, vaccination_info, setup_data, indexing, antigenic_maps, other_pars) {
-    invisible(.Call(`_rcppfunchcw_ab_kin_vac_general`, predicted_titres, theta, infection_info, vaccination_info, setup_data, indexing, antigenic_maps, other_pars))
+ab_kin_vac_prev_hist <- function(predicted_titres, theta, infection_info, vaccination_info, setup_data, indexing, antigenic_maps, other_pars) {
+    invisible(.Call(`_rcppfunchcw_ab_kin_vac_prev_hist`, predicted_titres, theta, infection_info, vaccination_info, setup_data, indexing, antigenic_maps, other_pars))
 }
 
 #' Base boosting fast

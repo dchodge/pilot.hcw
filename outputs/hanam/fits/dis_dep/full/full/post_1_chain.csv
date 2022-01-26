@@ -1,2 +1,0 @@
-sampno,mu,mu_short,tau,wane,sigma1,sigma2,MAX_TITRE,error,alpha,beta,kappa,t_change,boost_limit,gradient,titre_dependent,wane_type,mu_mean,mu_sd,rho_mean,rho_sd,vac_flag,mu_vac,mu_short_vac,wane_vac,tau_vac,sigma1_vac,sigma2_vac,rho_boost,rho_wane,lnlike,likelihood,prior_prob
-1,2.27409930340946,0,0.0785758326528594,0,0.14089861928951,0,12,1.66360652667936,1.3,2.7,0.9,6,6,0.2,0,0,2,0.5,0,1,0,0.601477393880487,2.95225288672373,0.0987868681733604,0,0.884955348796211,0.0263361221225932,1,1,-76932.1447213517,-76246.5357204942,-685.609000857541

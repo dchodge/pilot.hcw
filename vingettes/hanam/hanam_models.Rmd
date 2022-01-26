@@ -57,138 +57,72 @@ get_model_info_hanam(hanam)
 
 load(file = here::here("data", paste0("modelinfo_cross_", hanam$study_name_short, ".RDS"))) #all_models_hcw_pre_cross
 
-setup_run_serosolver(
-    all_models_hanam[[2]],
-    chains = 4,
-    iterations = 10000,
-    pt = TRUE,
-    filename = "dis_dep",
-    cross_sectional = FALSE,
-    continue_run = FALSE)
-
-
-setup_run_serosolver(
-    all_models_hanam[[3]],
-    chains = 4,
-    iterations = 10000,
-    pt = TRUE,
-    filename = "dis_dep",
-    cross_sectional = FALSE,
-    continue_run = FALSE)
-
-
-```
-
-# Fitting is done in a separate R script
-
-```{r}
-
-load(file = here::here("data", paste0("modelinfo_cross_", hanam$study_name_short, ".RDS"))) #all_models_hcw_pre_cross
+# Cross sectional data
 setup_run_serosolver(
     all_models_hanam[[1]],
     chains = 4,
-    iterations = 100000,
+    iterations = 10000,
     pt = TRUE,
     filename = "dis_dep",
     cross_sectional = TRUE,
     continue_run = FALSE)
-)
 
-
-```
-
-
-# Load the mcmc and plot the traces and schematics of titre loss
-```{r}
-
-load(file = here::here("data", paste0("modelinfo_cross_", hanam$study_name_short, ".RDS"))) #all_models_hcw_pre_cross
-
-all_post_test_cross_hanam <- load_mcmc_post(all_models_hanam[[1]],
-    fit_place = "local",
-    folder_name_1 = "dis_dep",
-    cross_sectional = TRUE,
-    burnin = 0,
-    thin = 1)
-
-all_post_test_cross_trim_hanam <- vector(mode = "list", length = 1)
-samp_no_list <- vector(mode = "list", length = 1)
-for (p in 1:1) { 
-    L <- nrow(all_post_test_cross_hanam$theta_list_chain[[1]])
-    B <- round(L / 2)
-    chain_list <- all_post_test_cross_hanam$theta_list_chain
-    pars_plot <- setdiff(all_models_hanam_cross[[1]]$other$pars_plot, "tau_vac" )
-    all_post_test_cross_trim_hanam[[p]] <- chain_list %>% map(~(.x[B:L, pars_plot] %>% as.data.frame))
-    samp_no_list[[p]] <- chain_list %>% map(~.x[B:L, c("sampno")])
-}
-
-all_post_test_cross_trim_inf_hist_hanam <- vector(mode = "list", length = 1)
-samp_no_list <- vector(mode = "list", length = 1)
-for (p in 1:1) { 
-    L <- nrow(all_post_test_cross_hanam$inf_list_chains[[1]])
-    B <- round(L / 2)
-    inf_hist <- all_post_test_cross_hanam$inf_list_chains
-    all_post_test_cross_trim_inf_hist_hanam[[p]] <- inf_hist %>%
-        map(~(.x %>% filter(sampno == 1200001) %>% as.data.frame %>%
-        rename(yr = i, id = j)))
-}
-
-post_cross <- list(post_raw = all_post_test_cross_hanam, post_trim = all_post_test_cross_trim_hanam, inf_hist_trim = all_post_test_cross_trim_inf_hist_hanam)
-save(post_cross, file = here::here("outputs", "hanam", "fits", "dis_dep", "cross_sec", "ln_post_cross.Rdata"))
-
-```
-
-
-# Comparison figures and statistics in sum_figs folder
-
-```{r}
-
-plot_traces(all_post_test_cross_hanam, all_models_hanam_cross[[1]], file = "dis_dep/cross_sec")
-plot_histogram(all_post_test_cross_hanam, all_models_hanam_cross[[1]], file = "dis_dep/cross_sec")
-plot_titre_post(all_post_test_cross_hanam, all_models_hanam_cross[[1]], file = "dis_dep/cross_sec")
-
-```
-
-
-
-# Load the mcmc and plot the traces and schematics of titre loss
-```{r}
-
-load(file = here::here("data", paste0("modelinfo_cross_", hanam$study_name_short, ".RDS"))) #all_models_hcw_pre_cross
-
-number <- 2
-
-all_post_test_cross_hanam <- load_mcmc_post(
-    all_models_hanam[[number]],
-    fit_place = "local",
-    folder_name_1 = "dis_dep",
+# Non crossectional data
+model_no <- 2
+setup_run_serosolver(
+    all_models_hanam[[model_no]],
+    chains = 4,
+    iterations = 10000,
+    pt = TRUE,
+    filename = "dis_dep",
     cross_sectional = FALSE,
-    burnin = 0,
-    thin = 1)
+    continue_run = FALSE)
 
-all_post_test_cross_trim_hanam <- vector(mode = "list", length = 1)
-samp_no_list <- vector(mode = "list", length = 1)
-for (p in 1:1) { 
-    L <- nrow(all_post_test_cross_hanam$theta_list_chain[[1]])
-    B <- round(L / 2)
-    chain_list <- all_post_test_cross_hanam$theta_list_chain
-    pars_plot <- setdiff(all_models_hanam[[1]]$other$pars_plot, "tau_vac" )
-    all_post_test_cross_trim_hanam[[p]] <- chain_list %>% map(~(.x[B:L, pars_plot] %>% as.data.frame))
-    samp_no_list[[p]] <- chain_list %>% map(~.x[B:L, c("sampno")])
+```
+
+
+# Load the mcmc and plot the traces and schematics of titre loss
+```{r}
+
+load(file = here::here("data", paste0("modelinfo_cross_", hanam$study_name_short, ".RDS"))) #all_models_hcw_pre_cross
+
+loadSavePost <- function(model_no, cross_sec, fileoutput) {
+    all_post_test_cross_hanam <- load_mcmc_post(all_models_hanam[[model_no]],
+        fit_place = "local",
+        folder_name_1 = "dis_dep",
+        cross_sectional = cross_sec,
+        burnin = 0,
+        thin = 1)
+
+    all_post_test_cross_trim_hanam <- vector(mode = "list", length = 1)
+    samp_no_list <- vector(mode = "list", length = 1)
+    for (p in 1:1) { 
+        L <- nrow(all_post_test_cross_hanam$theta_list_chain[[1]])
+        B <- round(L / 2)
+        chain_list <- all_post_test_cross_hanam$theta_list_chain
+        pars_plot <- setdiff(all_models_hanam[[model_no]]$other$pars_plot, "tau_vac" )
+        all_post_test_cross_trim_hanam[[p]] <- chain_list %>% map(~(.x[B:L, pars_plot] %>% as.data.frame))
+        samp_no_list[[p]] <- chain_list %>% map(~.x[B:L, c("sampno")])
+    }
+
+    all_post_test_cross_trim_inf_hist_hanam <- vector(mode = "list", length = 1)
+    samp_no_list <- vector(mode = "list", length = 1)
+    for (p in 1:1) { 
+        L <- nrow(all_post_test_cross_hanam$inf_list_chains[[1]])
+        B <- round(L / 2)
+        inf_hist <- all_post_test_cross_hanam$inf_list_chains
+        all_post_test_cross_trim_inf_hist_hanam[[p]] <- inf_hist %>%
+            map(~(.x %>% filter(sampno == 1200001) %>% as.data.frame %>%
+            rename(yr = i, id = j)))
+    }
+
+    post_cross <- list(post_raw = all_post_test_cross_hanam, post_trim = all_post_test_cross_trim_hanam, inf_hist_trim = all_post_test_cross_trim_inf_hist_hanam)
+    save(post_cross, file = here::here("outputs", "hanam", "fits", "dis_dep", fileoutput))
 }
 
-all_post_test_cross_trim_inf_hist_hanam <- vector(mode = "list", length = 1)
-samp_no_list <- vector(mode = "list", length = 1)
-for (p in 1:1) { 
-    L <- nrow(all_post_test_cross_hanam$inf_list_chains[[1]])
-    B <- round(L / 2)
-    inf_hist <- all_post_test_cross_hanam$inf_list_chains
-    all_post_test_cross_trim_inf_hist_hanam[[p]] <- inf_hist %>%
-        map(~(.x %>% filter(sampno == 130001) %>% as.data.frame %>%
-        dplyr::rename(yr = i, id = j)))
-}
-
-post_cross <- list(post_raw = all_post_test_cross_hanam, post_trim = all_post_test_cross_trim_hanam, inf_hist_trim = all_post_test_cross_trim_inf_hist_hanam)
-save(post_cross, file = here::here("outputs", "hanam", "fits", "dis_dep", "full", "LN_post_full.Rdata"))
+loadSavePost(1, TRUE, "cross_sec/post_cross.RData")
+loadSavePost(2, FALSE, "full/LN_post_full.RData")
+loadSavePost(3, FALSE, "full/SP_post_full.RData")
 
 ```
 
@@ -197,20 +131,26 @@ save(post_cross, file = here::here("outputs", "hanam", "fits", "dis_dep", "full"
 
 ```{r}
 
-plot_traces(all_post_test_cross_hanam, all_models_hanam[[2]], file = "dis_dep/full")
-plot_histogram(all_post_test_cross_hanam, all_models_hanam[[2]], file = "dis_dep/full")
-plot_titre_post(all_post_test_cross_hanam, all_models_hanam[[2]], file = "dis_dep/full")
+load(file = here::here("data", paste0("modelinfo_cross_", hanam$study_name_short, ".RDS"))) #all_models_hcw_pre_cross
+
+loadPlotFigs <- function(model_no, folder_name, fileoutput) {
+    load(file = here::here("outputs", "hanam", "fits", "dis_dep", fileoutput))
+
+    plot_traces(post_cross$post_raw, all_models_hanam[[model_no]], file = folder_name)
+    plot_histogram(post_cross$post_raw, all_models_hanam[[model_no]], file = folder_name)
+    plot_titre_post(post_cross$post_raw, all_models_hanam[[model_no]], file = folder_name)
+}
+
+loadPlotFigs(1, "dis_dep/cross_sec", "cross_sec/post_cross.RData")
+loadPlotFigs(2, "dis_dep/full", "full/LN_post_full.RData")
+loadPlotFigs(3, "dis_dep/full", "full/SP_post_full.RData")
 
 ```
 
 
-# Get the priors for the full version
-
 ```{r}
 
-# Best fit model is mt according to waic
-post_best <- all_post_test_cross_trim[[3]] %>% bind_rows
-post_best %>% apply(2, median) %>% as.data.frame %>% t
-post_best %>% apply(2, quantile, c(0.01, 0.99)) %>% as.data.frame
+# Best fit of the two models according to WAIC 
+save_plot_waic_cross_hanam(all_models_hanam[c(2, 3)], file = "dis_dep", FALSE)
 
 ```

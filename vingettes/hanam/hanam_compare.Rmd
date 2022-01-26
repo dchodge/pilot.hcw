@@ -55,37 +55,61 @@ load(here::here("data", "hanam_data.RDS")) # hcwpre
 
 
 
-# Plot sensible things
+# Plot sensible stuff for Lognormal model
 
 ```{r}
 
-load(file = here::here("data", paste0("modelinfo_cross_", hanam$study_name_short, ".RDS"))) #all_models_hcw_pre_cross
+# Log normal
+load(file = here::here("data", paste0("modelinfo_cross_", hanam$study_name_short, ".RDS")))
 load(file = here::here("outputs", "hanam", "fits", "dis_dep", "full", "LN_post_full.Rdata"))
-all_post_test_full <- post_cross$post_raw
- 
-all_post_test_full[[1]][,"mu_LN"] %>% mean
-all_post_test_full[[1]][,"sigma_LN"] %>% mean
+all_post_test_full_raw <- post_cross$post_raw
+all_post_test_full <- post_cross$post_trim
+
+sero_data <- all_models_hanam[[2]]$create_post$titre_data 
+
+sero_data_base <- sero_data %>% 
+        group_by(virus_isol_yr, sample_time) %>%
+        summarise(titre_mean = mean(titre_value, rm.na = TRUE)) %>%
+        pivot_wider(names_from = sample_time, values_from = titre_mean) %>%
+        mutate(day4 = (`4` - `0`), day7 = (`7` - `0`), day14 = (`14` - `0`), day21 = (`21` - `0`), day280 = (`280` - `0`) ) %>%
+        select(virus_isol_yr, base = `0`, day4, day7, day14, day21, day280) %>%
+        pivot_longer(c(day4, day7, day14, day21, day280), names_to = "time", values_to = "abs") %>%
+        mutate(time = case_when(time == "day4"~"4", time == "day7"~"7", time == "day14"~"14", time == "day21"~"21", time == "day280"~"280"))
+
+parsfunctionalLN <- all_post_test_full %>% bind_rows %>% select(mu_LN, sigma_LN, alpha_LN)
+mu_LN_v <- parsfunctionalLN$mu_LN
+sigma_LN_v <- parsfunctionalLN$sigma_LN
+alpha_LN_v <- parsfunctionalLN$alpha_LN
+
+functionalLN <- function(x, mu, sigma, alpha) alpha * dlnorm(x, mu, sigma)
+
+dataplot <- sero_data_base %>% filter(virus_isol_yr == 2016) %>% mutate(time = as.numeric(time) / 7)
 
 ggplot() + 
-    xlim(0, 52) + ylim(0, 1) + 
-    geom_function(fun = dlnorm, args = list(meanlog = 1.168693,  sdlog = 0.1580725))
-dlnorm(1:52, 1.168693,  0.1580725)
+    xlim(0, 52) + ylim(0, 4) + 
+    geom_point(data = dataplot, aes(x = time, y = abs), size = 3, alpha = 0.8) + 
+    lapply(seq(1000, 2000, 10),
+        function(x) geom_function(fun = functionalLN, 
+            args = list(mu = mu_LN_v[x], sigma =  sigma_LN_v[x], alpha = alpha_LN_v[x]), 
+            color = "red", alpha = 0.5, size = 0.1)
+     ) +
+     theme_minimal() + labs(x = "Week since vaccination", y = "Titre increase")
 
+model_no <- 2
+chain_short <- as.data.frame(all_post_test_full_raw$theta_chain) %>% filter(chain_no == 1)
+infection_histories <- all_post_test_full_raw$inf_chain %>% filter(chain_no == 1)
+titre_dat <- all_models_hanam[[model_no]]$create_post$titre_data
+vaccination_histories <- all_models_hanam[[model_no]]$create_post$vaccination_histories
 
-chain_short <- as.data.frame(all_post_test_full$theta_chain) %>% filter(chain_no == 1)
-infection_histories <- all_post_test_full$inf_chain %>% filter(chain_no == 1)
-titre_dat <- all_models_hanam[[3]]$create_post$titre_data
-vaccination_histories <- all_models_hanam[[3]]$create_post$vaccination_histories
+antigenic_map <- all_models_hanam[[model_no]]$create_post$antigenic_map
+strain_isolation_times <-  all_models_hanam[[model_no]]$create_post$strain_isolation_times
+par_tab <- all_models_hanam[[model_no]]$create_post$par_tab
 
-antigenic_map <- all_models_hanam[[3]]$create_post$antigenic_map
-strain_isolation_times <-  all_models_hanam[[3]]$create_post$strain_isolation_times
-par_tab <- all_models_hanam[[3]]$create_post$par_tab
+vaccination_histories <- all_models_hanam[[model_no]]$create_post$vac_history
+custom_ab_kin_func <- all_models_hanam[[model_no]]$custom_ab_kin_func
+custom_ab_kin_func_1 <- all_models_hanam[[model_no]]$custom_ab_kin_func
 
-vaccination_histories <- all_models_hanam[[3]]$create_post$vac_history
-custom_ab_kin_func <- all_models_hanam[[3]]$custom_ab_kin_func
-custom_ab_kin_func_1 <- all_models_hanam[[3]]$custom_ab_kin_func
-
-custom_antigenic_maps_func <- all_models_hanam[[3]]$custom_antigenic_maps_func
+custom_antigenic_maps_func <- all_models_hanam[[model_no]]$custom_antigenic_maps_func
 
 expand_titredat <- FALSE
 nsamp <- 100
@@ -93,19 +117,6 @@ titre_before_infection <- FALSE
 measurement_indices_by_time <- NULL
 individuals <- unique(titre_dat$individual)
 mu_indices <- NULL
-
-y <- get_titre_predictions(chain = chain_short,
-                        infection_histories = infection_histories,
-                        vaccination_histories = vaccination_histories,
-                        titre_dat = titre_dat,
-                        individuals = 1:49,
-                        antigenic_map = antigenic_map,
-                        strain_isolation_times = strain_isolation_times,
-                        par_tab = par_tab,
-                        custom_ab_kin_func = custom_ab_kin_func,
-                        custom_antigenic_maps_func = custom_antigenic_maps_func
-                        )
-
 
 plot_infection_histories_long(
                         chain = chain_short,
@@ -122,6 +133,108 @@ plot_infection_histories_long(
 
 
 ```
+
+
+# Plot sensible stuff for SP-model
+
+```{r}
+
+# Set Point
+load(file = here::here("data", paste0("modelinfo_cross_", hanam$study_name_short, ".RDS")))
+load(file = here::here("outputs", "hanam", "fits", "dis_dep", "full", "SP_post_full.Rdata"))
+all_post_test_full_raw <- post_cross$post_raw
+all_post_test_full <- post_cross$post_trim
+
+sero_data <- all_models_hanam[[3]]$create_post$titre_data 
+sero_data_base <- sero_data %>% 
+        group_by(virus_isol_yr, sample_time) %>%
+        summarise(titre_mean = mean(titre_value, rm.na = TRUE)) %>%
+        pivot_wider(names_from = sample_time, values_from = titre_mean) %>%
+        mutate(day4 = (`4` - `0`), day7 = (`7` - `0`), day14 = (`14` - `0`), day21 = (`21` - `0`), day280 = (`280` - `0`) ) %>%
+        select(virus_isol_yr, base = `0`, day4, day7, day14, day21, day280) %>%
+        pivot_longer(c(day4, day7, day14, day21, day280), names_to = "time", values_to = "abs") %>%
+        mutate(time = case_when(time == "day4"~"4", time == "day7"~"7", time == "day14"~"14", time == "day21"~"21", time == "day280"~"280"))
+dataplot <- sero_data_base %>% filter(virus_isol_yr == 2016) %>% mutate(time = as.numeric(time) / 7)
+
+parsfunctionalSP <- all_post_test_full %>% bind_rows %>% select(th1_SP, th2_SP, th3_SP, alpha_SP)
+th1_SP_v <- parsfunctionalSP$th1_SP
+th2_SP_v <- parsfunctionalSP$th2_SP
+th3_SP_v <- parsfunctionalSP$th3_S
+alpha_SP_v <- parsfunctionalSP$alpha_SP
+
+boost_to_set_point <- function(x, th1, th2, th3, alpha) {
+    alpha * (th3 / (th2 + th3) * (1- exp(-(th2 + th3)* x)) - (th1 - th3) / (th1 - th2 - th3) * (exp(-th1 * x) - exp(- (th2 + th3) * x)))
+}
+
+ggplot() + 
+    xlim(0, 52) + ylim(0, 4) + 
+    geom_point(data = dataplot, aes(x = time, y = abs), size = 3, alpha = 0.8) + 
+    lapply(seq(1000, 2000, 50),
+        function(x) geom_function(fun = boost_to_set_point, 
+            args = list(th1 = th1_SP_v[x], th2 =  th2_SP_v[x], th3 = th3_SP_v[x], alpha = alpha_SP_v[x]), 
+            color = "red", alpha = 0.5, size = 0.1)
+     ) +
+    lapply(seq(1000, 2000, 50),
+        function(x) geom_function(fun = functionalLN, 
+            args = list(mu = mu_LN_v[x], sigma =  sigma_LN_v[x], alpha = alpha_LN_v[x]), 
+            color = "blue", alpha = 0.5, size = 0.1)
+     )
+     theme_minimal() + labs(x = "Week since vaccination", y = "Titre increase")
+
+
+model_no <- 3
+chain_short <- as.data.frame(all_post_test_full_raw$theta_chain) %>% filter(chain_no == 1)
+infection_histories <- all_post_test_full_raw$inf_chain %>% filter(chain_no == 1)
+titre_dat <- all_models_hanam[[model_no]]$create_post$titre_data
+vaccination_histories <- all_models_hanam[[model_no]]$create_post$vaccination_histories
+
+antigenic_map <- all_models_hanam[[model_no]]$create_post$antigenic_map
+strain_isolation_times <-  all_models_hanam[[model_no]]$create_post$strain_isolation_times
+par_tab <- all_models_hanam[[model_no]]$create_post$par_tab
+
+vaccination_histories <- all_models_hanam[[model_no]]$create_post$vac_history
+custom_ab_kin_func <- all_models_hanam[[model_no]]$custom_ab_kin_func
+custom_ab_kin_func_1 <- all_models_hanam[[model_no]]$custom_ab_kin_func
+
+custom_antigenic_maps_func <- all_models_hanam[[model_no]]$custom_antigenic_maps_func
+
+expand_titredat <- FALSE
+nsamp <- 100
+titre_before_infection <- FALSE
+measurement_indices_by_time <- NULL
+individuals <- unique(titre_dat$individual)
+mu_indices <- NULL
+
+plot_infection_histories_long(
+                        chain = chain_short,
+                        infection_histories = infection_histories,
+                        vaccination_histories = vaccination_histories,
+                        titre_dat = titre_dat,
+                        individuals = 1,
+                        antigenic_map = antigenic_map,
+                        strain_isolation_times = strain_isolation_times,
+                        par_tab = par_tab,
+                        custom_ab_kin_func = custom_ab_kin_func,
+                        custom_antigenic_maps_func = custom_antigenic_maps_func,
+                        size_plot = 25)
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 ```{r}
