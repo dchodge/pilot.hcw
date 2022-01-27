@@ -4,7 +4,7 @@ get_model_info_hcw_pre_full <- function(study) {
      par_tab_full <-  rbind(par_tab,
         list("mu_vac",       1, 1, 0.1, 0, 1,  0, 1, 1),
         list("mu_short_vac", 0, 1, 0.1, 0, 4,  1, 3, 1),
-        list("wane_vac",     0, 1, 0.1, 1 / 12, 4 / 12,  1 / 12, 4 / 12, 1),
+        list("wane_vac",     0, 1, 0.1, 0.25 / 12, 4 / 12,  0.5 / 12, 4 / 12, 1),
         list("tau_vac",      0, 1, 0.1,  0, 1,  0.01, 0.1, 0),
         list("sigma1_vac",   1, 1, 0.1, 0.1, 10,  0.5, 2.0, 1),
         list("sigma2_vac",   0, 1, 0.1, 0, 0.3,  0.01, 0.1, 1),
@@ -62,7 +62,68 @@ get_model_info_hcw_pre_full <- function(study) {
             custom_antigenic_maps_func = make_antigenic_maps_vac2
     )
 
-    all_models <- list(model_vac_full)
+    par_tab_m1 <- par_tab_full %>% 
+        mutate(fixed = replace(fixed, names == "rho_boost", 0))
+
+    model_vac_m1 <- make_model_info_hcwpre(
+        study = study,
+        par_tab = par_tab_m1,
+        antigenic_map = antigenic_map,
+        sample_yr = 2016,
+        prior_version = 2,
+        output_file = "hpc/outputs/",
+        vacc_type = "vac",
+        model_name = "m1",
+        pars_plot = c("mu", "sigma1", "tau", "mu_vac", "mu_short_vac", "wane_vac", "sigma1_vac", "rho_boost"),
+        prior_function = function(cur_pars) { 
+            return(0)
+        },
+        custom_ab_kin_func = ab_kin_vac_prev_hist,
+        custom_antigenic_maps_func = make_antigenic_maps_vac2
+    )
+
+    par_tab_m2 <- par_tab_full %>% 
+        mutate(fixed = replace(fixed, names == "rho_wane", 0))
+
+    model_vac_m2 <- make_model_info_hcwpre(
+        study = study,
+        par_tab = par_tab_m2,
+        antigenic_map = antigenic_map,
+        sample_yr = 2016,
+        prior_version = 2,
+        output_file = "hpc/outputs/",
+        vacc_type = "vac",
+        model_name = "m2",
+        pars_plot = c("mu", "sigma1", "tau", "mu_vac", "mu_short_vac", "wane_vac", "sigma1_vac", "rho_wane"),
+        prior_function = function(cur_pars) { 
+            return(0)
+        },
+        custom_ab_kin_func = ab_kin_vac_prev_hist,
+        custom_antigenic_maps_func = make_antigenic_maps_vac2
+    ) 
+
+    par_tab_m3 <- par_tab_full %>% 
+        mutate(fixed = replace(fixed, names == "rho_boost", 0)) %>%
+        mutate(fixed = replace(fixed, names == "rho_wane", 0))
+
+    model_vac_m3 <- make_model_info_hcwpre(
+        study = study,
+        par_tab = par_tab_m3,
+        antigenic_map = antigenic_map,
+        sample_yr = 2016,
+        prior_version = 2,
+        output_file = "hpc/outputs/",
+        vacc_type = "vac",
+        model_name = "m3",
+        pars_plot = c("mu", "sigma1", "tau", "mu_vac", "mu_short_vac", "wane_vac", "sigma1_vac", "rho_boost", "rho_wane"),
+        prior_function = function(cur_pars) { 
+            return(0)
+        },
+        custom_ab_kin_func = ab_kin_vac_prev_hist,
+        custom_antigenic_maps_func = make_antigenic_maps_vac2
+)
+
+    all_models <- list(model_vac_full, model_vac_m1, model_vac_m2, model_vac_m3)
     all_models_hcw_pre_full <- all_models %>% map(~convert_to_resolution(.x, 12))
 
     save(all_models_hcw_pre_full, file = here::here("data", paste0("modelinfo_full_", study$study_name_short, ".RDS")))

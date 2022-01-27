@@ -477,7 +477,6 @@ void ab_kin_vac_general(
 
             time = sampling_time - vaccination_times[x_vac]; // Time vaccination
             wane_amount_vac = MAX(0, 1.0 - wane_vac * time); // Basic waning function
-
             seniority = MAX(0, 1.0 - tau * (n_inf - 1.0)); // Antigenic seniority
             
             vac_map_index = vaccination_strain_indices_tmp[x_vac]; // Index of this vaccinating strain in antigenic map
@@ -674,7 +673,7 @@ void ab_kin_vac_prev_hist(
               // check measure_stain_indicies is the right vector here
               index = measurement_strain_indices[tmp_titre_index + k]*number_strains + vac_map_index;
               double titre_incr_amount_long = seniority * (mu * mu_vac * antigenic_map_long_vac[index]);
-              double titre_incr_amount_short = seniority * ((mu_short_vac * rho_boost_par) * antigenic_map_short_vac[index]) * wane_amount_vac;
+              double titre_incr_amount_short = seniority * ((mu_short_vac * rho_boost_par) * antigenic_map_long_vac[index]) * wane_amount_vac;
               double titre_incr_amount = titre_incr_amount_long + titre_incr_amount_short;
    
               predicted_titres[tmp_titre_index + k] += titre_incr_amount;

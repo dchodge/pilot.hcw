@@ -122,11 +122,54 @@ plot_infection_histories_long(
 load(file = here::here("data", paste0("modelinfo_full_", hcwpre$study_name_short, ".RDS"))) #all_models_hcw_pre_cross
 load(file = here::here("outputs", "hcw_pre", "fits", "dis_dep", "full", "trimmed_post_full.Rdata"))
 
-pos <- 1
+all_post_test_full_raw <- post_full$post_raw
+all_post_test_full <- post_full$post_trim
+post_out_trim <- all_post_test_full[[1]][[1]]
+
+mu_short_vac_v <- post_out_trim$mu_short_vac
+wane_vac_v <- post_out_trim$wane_vac
+mu_v <- post_out_trim$mu
+mu_vac_v <- post_out_trim$mu_vac
+
+sero_data <- all_models_hcw_pre_full[[1]]$create_post$titre_data 
+sero_data_base <- sero_data %>% 
+        group_by(virus, sample_time) %>%
+        summarise(titre_mean = mean(titre, rm.na = TRUE)) %>%
+        pivot_wider(names_from = sample_time, values_from = titre_mean) %>%
+        mutate(day30 = (`30` - `0`), day180 = (`180` - `0`)) %>%
+        select(virus, base = `0`, day30, day180) %>%
+        pivot_longer(c(day30, day180), names_to = "time", values_to = "abs") %>%
+        mutate(time = case_when(time == "day30"~"30", time == "day180"~"180"))
+
+dataplot <- sero_data_base %>% filter(virus == 2016 * 12) %>% mutate(time = as.numeric(time) / 30)
+
+func_linear <- function(x, boost, wane, mu, mu_vac) boost - wane * x + (mu * mu_vac)
+ggplot() +
+    xlim(0, 12) +
+    lapply(500:550,
+        function(i) geom_function(
+            fun = func_linear, 
+            args = list(boost = mu_short_vac_v[i], wane = wane_vac_v[i], mu = mu_v[i], mu_vac = mu_vac_v[i]), 
+            alpha= 0.7, size = 0.2, color = "red")
+    ) + 
+    geom_point(data = dataplot, aes(x = time, y = abs), size = 3) +
+    labs(x = "Time (months)", y = "Titre increase")
+
+
+
+
+
+
+
+
+
+
+
+
 
 all_post_test_full <- post_full$post_raw
-chain_full <- as.data.frame(all_post_test_full[[pos]]$theta_chain) %>% filter(chain_no == 2)
-infection_histories <- all_post_test_full[[pos]]$inf_chain %>% filter(chain_no == 2)
+chain_full <- as.data.frame(all_post_test_full_raw[[pos]]$theta_chain) %>% filter(chain_no == 2)
+infection_histories <- all_post_test_full_raw[[pos]]$inf_chain %>% filter(chain_no == 2)
 titre_dat <- all_models_hcw_pre_full[[pos]]$create_post$titre_data 
 vaccination_histories <- all_models_hcw_pre_full[[pos]]$create_post$vaccination_histories
 
@@ -146,8 +189,6 @@ titre_before_infection <- FALSE
 measurement_indices_by_time <- NULL
 individuals <- unique(titre_dat$individual)
 mu_indices <- NULL
-
-chain_full <- chain_full %>% filter(sampno > 300000)
 
 y <- get_titre_predictions(
     chain = chain_full,
@@ -169,7 +210,7 @@ plot_infection_histories_long(
     infection_histories = infection_histories,
     vaccination_histories = vaccination_histories,
     titre_dat = titre_dat,
-    individuals = 1:4,
+    individuals = 5:10,
     antigenic_map = antigenic_map,
     strain_isolation_times = strain_isolation_times,
     par_tab = par_tab,
