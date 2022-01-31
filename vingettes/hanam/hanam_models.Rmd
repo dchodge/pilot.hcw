@@ -21,13 +21,13 @@ require(viridis)
 require(ggpubr)
 library(mvoutlier)
 
-require(foreach)
+require(foreach)s
 require(doParallel)
 require(Rcpp)
 
 require(extrafont)
 require(showtext)
-font_add("Avenir", "/Users/davidhodgson/Documents/personal/fonts/avenir_ff/AvenirLTStd-Book.otf")  
+font_add("Avenir", "/Users/davidhodgson/Documents/personal/fonts/avenir_ff/AvenirLTStd-Book.otf")
 showtext_auto()
 theme_set(theme_light())
 library(wesanderson)
