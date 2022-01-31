@@ -22,7 +22,7 @@ load(file = here::here("data", paste0("modelinfo_cross_", hanam$study_name_short
 setup_run_serosolver(
         all_models_hanam_cross[[1]],
         chains = 4,
-        iterations = 1000000,
+        iterations = 100000,
         pt = TRUE,
         filename = "dis_dep",
         cross_sectional = TRUE,

@@ -87,10 +87,10 @@ load(file = here::here("data", paste0("modelinfo_cross_", hcwpre$study_name_shor
 
 
 load(file = here::here("data", paste0("modelinfo_full_", hcwpre$study_name_short, ".RDS"))) #all_models_hcw_pre_full
-3 %>% map(~setup_run_serosolver(
+1 %>% map(~setup_run_serosolver(
     all_models_hcw_pre_full[[.x]],
     chains = 4,
-    iterations = 50000,
+    iterations = 5000,
     pt = TRUE,
     filename = "dis_dep",
     cross_sectional = FALSE,
@@ -186,12 +186,12 @@ all_post_test_full <- all_models_hcw_pre_full %>%
         burnin = 0,
         thin = 1))
 
-num <- 1
+num <- 4
 
 # Trim the the data, use last 50% and throw out outliers 
 all_post_test_full_trim <- vector(mode = "list", length = num)
 samp_no_list <- vector(mode = "list", length = num)
-for (p in 1:1) { 
+for (p in 1:num) { 
     L <- nrow(all_post_test_full[[p]]$theta_list_chain[[1]])
     B <- round(L / 2)
     chain_list <- all_post_test_full[[p]]$theta_list_chain
