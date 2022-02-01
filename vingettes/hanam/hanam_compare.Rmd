@@ -95,6 +95,12 @@ ggplot() +
      ) +
      theme_minimal() + labs(x = "Week since vaccination", y = "Titre increase")
 
+# Log normal
+load(file = here::here("data", paste0("modelinfo_cross_", hanam$study_name_short, ".RDS")))
+load(file = here::here("outputs", "hanam", "fits", "dis_dep", "full", "LN_post_full.Rdata"))
+all_post_test_full_raw <- post_cross$post_raw
+all_post_test_full <- post_cross$post_trim
+
 model_no <- 2
 chain_short <- as.data.frame(all_post_test_full_raw$theta_chain) %>% filter(chain_no == 1)
 infection_histories <- all_post_test_full_raw$inf_chain %>% filter(chain_no == 1)
@@ -148,7 +154,7 @@ all_post_test_full <- post_cross$post_trim
 sero_data <- all_models_hanam[[3]]$create_post$titre_data 
 sero_data_base <- sero_data %>% 
         group_by(virus_isol_yr, sample_time) %>%
-        summarise(titre_mean = mean(titre_value, rm.na = TRUE)) %>%
+        summarise(titre_mean = mean(titre_value, na.rm = TRUE)) %>%
         pivot_wider(names_from = sample_time, values_from = titre_mean) %>%
         mutate(day4 = (`4` - `0`), day7 = (`7` - `0`), day14 = (`14` - `0`), day21 = (`21` - `0`), day280 = (`280` - `0`) ) %>%
         select(virus_isol_yr, base = `0`, day4, day7, day14, day21, day280) %>%
@@ -156,31 +162,212 @@ sero_data_base <- sero_data %>%
         mutate(time = case_when(time == "day4"~"4", time == "day7"~"7", time == "day14"~"14", time == "day21"~"21", time == "day280"~"280"))
 dataplot <- sero_data_base %>% filter(virus_isol_yr == 2016) %>% mutate(time = as.numeric(time) / 7)
 
-parsfunctionalSP <- all_post_test_full %>% bind_rows %>% select(th1_SP, th2_SP, th3_SP, alpha_SP)
+dataplot_2 <- sero_data %>% filter(virus_isol_yr == 2016) %>% select(pid, virus_isol_yr, sample_time, titre) %>%
+    pivot_wider(names_from = sample_time, values_from = titre) %>% 
+     mutate(day4 = (`4` - `0`), day7 = (`7` - `0`), day14 = (`14` - `0`), day21 = (`21` - `0`), day280 = (`280` - `0`) ) %>%
+        select(virus_isol_yr, base = `0`, day4, day7, day14, day21, day280) %>%
+        pivot_longer(c(day4, day7, day14, day21, day280), names_to = "time", values_to = "abs")  %>%
+        mutate(time = case_when(time == "day4"~"4", time == "day7"~"7", time == "day14"~"14", time == "day21"~"21", time == "day280"~"280")) %>% 
+        mutate(time = as.numeric(time) / 7) %>% 
+        group_by(time, abs)
+
+dataplot_2_full <- dataplot_2 %>% summarise(n = n())
+dataplot_2_sum <- dataplot_2 %>% ungroup %>% as.data.frame %>% group_by(time)  %>% summarise(abs_mean = mean(abs, na.rm = TRUE))
+
+parsfunctionalSP <- all_post_test_full[[1]][[2]] %>% select(th1_SP, th2_SP, th3_SP, alpha_SP)
 th1_SP_v <- parsfunctionalSP$th1_SP
 th2_SP_v <- parsfunctionalSP$th2_SP
 th3_SP_v <- parsfunctionalSP$th3_S
 alpha_SP_v <- parsfunctionalSP$alpha_SP
+
 
 boost_to_set_point <- function(x, th1, th2, th3, alpha) {
     alpha * (th3 / (th2 + th3) * (1- exp(-(th2 + th3)* x)) - (th1 - th3) / (th1 - th2 - th3) * (exp(-th1 * x) - exp(- (th2 + th3) * x)))
 }
 
 ggplot() + 
-    xlim(0, 52) + ylim(0, 4) + 
-    geom_point(data = dataplot, aes(x = time, y = abs), size = 3, alpha = 0.8) + 
-    lapply(seq(1000, 2000, 50),
+    xlim(0, 52) + ylim(0, 4) +
+    geom_point(data = dataplot_2_full, aes(x = time, y = abs, size = n), shape = 21, fill = "gray", alpha = 0.5) + 
+    geom_point(data = dataplot_2_sum, aes(x = time, y = abs_mean), shape = 22, size = 5, fill = "black", alpha = 0.5) + 
+    lapply(seq(500, 1000, 5),
         function(x) geom_function(fun = boost_to_set_point, 
             args = list(th1 = th1_SP_v[x], th2 =  th2_SP_v[x], th3 = th3_SP_v[x], alpha = alpha_SP_v[x]), 
             color = "red", alpha = 0.5, size = 0.1)
      ) +
-    lapply(seq(1000, 2000, 50),
+    lapply(seq(500, 1000, 5),
         function(x) geom_function(fun = functionalLN, 
             args = list(mu = mu_LN_v[x], sigma =  sigma_LN_v[x], alpha = alpha_LN_v[x]), 
             color = "blue", alpha = 0.5, size = 0.1)
-     )
-     theme_minimal() + labs(x = "Week since vaccination", y = "Titre increase")
+     ) +
+     theme_bw() + labs(x = "Week since vaccination", y = "Titre increase")
+ggsave(file = here::here("outputs", "hanam", "analysis", "figs", "figD.pdf"))
 
+```
+
+# Look at cross immunity
+```{r}
+
+melt_antigenic_coords <- function(anti.map.in) { # anti.map.in can be vector or matrix - rows give inf_times, columns give location
+  # Calculate antigenic distances
+  if (is.null(dim(anti.map.in))) { # check if input map is one or 2 dimensions
+    # If 1D antigenic 'line' defined, calculate distances directory from input
+    (dmatrix <- sapply(anti.map.in, function(x) {
+      y <- abs(anti.map.in - x)
+      y
+    }))
+  } else { # If 2D antigenic map defined, calculate distances directory from input
+    (dmatrix <- apply(
+      anti.map.in, 1,
+      function(x) {
+        y <- sqrt(colSums(apply(anti.map.in, 1, function(y) {
+          (y - x)^2
+        })))
+        y
+      }
+    ))
+  }
+}
+
+# Log normal
+load(file = here::here("data", paste0("modelinfo_cross_", hanam$study_name_short, ".RDS")))
+load(file = here::here("outputs", "hanam", "fits", "dis_dep", "full", "LN_post_full.Rdata"))
+all_post_test_full_raw_ln <- post_cross$post_raw
+all_post_test_full_ln <- post_cross$post_trim
+
+load(file = here::here("outputs", "hanam", "fits", "dis_dep", "full", "SP_post_full.Rdata"))
+all_post_test_full_raw_sp <- post_cross$post_raw
+all_post_test_full_sp <- post_cross$post_trim
+
+antigenic_map <- all_models_hanam[[1]]$create_post$antigenic_map
+
+ln_cross <- all_post_test_full_ln[[1]][[2]] %>% select(mu, sigma1, sigma1_vac)
+sp_cross <- all_post_test_full_sp[[1]][[2]] %>% select(mu, sigma1, sigma1_vac)
+
+get_rel_vec <- function(sigma) {
+    antigenic_map_melted <- c(melt_antigenic_coords(antigenic_map[, c("x_coord", "y_coord")]))
+    temp <- 1 - antigenic_map_melted * sigma
+    temp[temp < 0] = 0
+    tempmat <- temp %>% matrix(nrow = 49)
+
+    tempmat[, 49]
+}
+
+ln_mu <- ln_cross[, 1]
+sp_mu <- sp_cross[, 1]
+
+bind_rows(
+    data.frame(model = "log normal", mu = ln_mu),
+    data.frame(model = "set point", mu = sp_mu)
+) %>% 
+    ggplot() + 
+        geom_boxplot(aes(x = model, y = mu)) + 
+        labs(x = "Model", y = "Long-term boost due to natural infection")
+
+ln_n_s <- mean(ln_cross[, 2])
+ln_v_s <- mean(ln_cross[, 2] * ln_cross[, 3])
+
+sp_n_s <- mean(sp_cross[, 2])
+sp_v_s <- mean(sp_cross[, 2] * sp_cross[, 3])
+
+df_sigma_plot_natural <- bind_rows(
+    data.frame(type = "log normal", time = 1968:2016, cross = get_rel_vec(ln_n_s)),
+    data.frame(type = "set point", time = 1968:2016, cross = get_rel_vec(sp_n_s))
+)
+
+df_sigma_plot_vaccination <- bind_rows(
+      data.frame(type = "log normal", time = 1968:2016, cross = get_rel_vec(ln_v_s)),
+    data.frame(type = "set point", time = 1968:2016, cross = get_rel_vec(sp_v_s))
+)
+
+
+p1 <- df_sigma_plot_natural %>%
+    ggplot() +
+        geom_bar(aes(x = time, y = cross, fill = type), stat="identity",position = "identity") +
+        facet_grid(rows = vars(type)) + 
+        labs(x = "Year", y = "Relative boosting", fill = "Model", title = "Long-term cross immunity due to natural infection")
+
+p2 <- df_sigma_plot_vaccination %>%
+    ggplot() +
+        geom_bar(aes(x = time, y = cross, fill = type), stat="identity",position = "identity") +
+        facet_grid(rows = vars(type)) + 
+        labs(x = "Year", y = "Relative boosting", fill = "Model", title = "Cross immunity due to vaccination infection")
+require(patchwork)
+p1 / p2 + plot_layout(guides = "collect")
+
+
+ln_post <- all_post_test_full_ln[[1]][[2]]
+ln_n_s <- mean(ln_post$sigma1)
+ln_v_s <- mean(ln_post$sigma1 * ln_post$sigma1_vac)
+
+functionalLN <- function(x, mu, sigma, alpha) alpha * dlnorm(x, mu, sigma)
+mu_B_LN <- ln_post$mu[100]
+mu_LN <- ln_post$mu_LN[100]
+sigma_LN <- ln_post$sigma_LN[100]
+alpha_LN <- ln_post$alpha_LN[100]
+
+sp_post <- all_post_test_full_sp[[1]][[2]]
+sp_n_s <- mean(sp_post$sigma1)
+sp_v_s <- mean(sp_post$sigma1 * sp_post$sigma1_vac)
+
+boost_to_set_point <- function(x, th1, th2, th3, alpha) {
+    alpha * (th3 / (th2 + th3) * (1- exp(-(th2 + th3)* x)) - (th1 - th3) / (th1 - th2 - th3) * (exp(-th1 * x) - exp(- (th2 + th3) * x)))
+}
+
+mu_B_SP <- sp_post$mu[100]
+th1_SP <- sp_post$th1_SP[100]
+th2_SP <- sp_post$th2_SP[100]
+th3_SP <- sp_post$th3_SP[100]
+alpha_SP <- sp_post$alpha_SP[100]
+
+
+data_plot_all <- list()
+for(i in 1:52){
+    data_plot_all[[i]] <- data.frame(
+        x = i,
+        y = 1968:2016,
+        lognormal = get_rel_vec(ln_v_s) * functionalLN(i, mu_LN, sigma_LN, alpha_LN),
+        setpoint = get_rel_vec(sp_v_s) * boost_to_set_point(i, th1_SP, th2_SP, th3_SP, alpha_SP)
+    )
+}
+df_data_plot_all <- data_plot_all %>% bind_rows
+
+df_data_plot_all_long <- df_data_plot_all %>% pivot_longer(!c(x,y), names_to = "model_type", values_to = "titre_boost")
+df_data_plot_all_long %>% 
+    ggplot() + 
+        geom_tile(aes(x = x, y = y, fill = titre_boost), color = "black") +
+        scale_fill_gradient(low = "white",
+              high = "red") + 
+              labs(x = "Weeks post vaccination", y = "Virus year", fill = "Titre boost") +
+        facet_grid(vars(model_type))
+ggsave(file = here::here("outputs", "hanam", "analysis", "figs", "figE.pdf"), height = 5, width = 8)
+
+i_vals <- seq(1, 52 * 10, 52)
+data_plot_all_nat <- list()
+for(i in 1:10){
+    data_plot_all_nat[[i]] <- data.frame(
+        x = i,
+        y = 1968:2016,
+        lognormal_nat = get_rel_vec(ln_n_s) * mu_B_LN,
+        sp_nat = get_rel_vec(sp_n_s) * mu_B_SP,
+        lognormal_vac = get_rel_vec(ln_v_s) * functionalLN(i_vals[i], mu_LN, sigma_LN, alpha_LN),
+        sp_vac = get_rel_vec(sp_v_s) * boost_to_set_point(i_vals[i], th1_SP, th2_SP, th3_SP, alpha_SP)
+    )
+}
+df_data_plot_all_nat <- data_plot_all_nat %>% bind_rows
+
+df_data_plot_all_nat_long <-  df_data_plot_all_nat %>% pivot_longer(!c(x,y), names_to = "model_type", values_to = "titre_boost")
+ df_data_plot_all_nat_long %>%
+    ggplot() + 
+        geom_tile(aes(x = x, y = y, fill = titre_boost), color = "black") +
+        scale_fill_gradient(low = "white",
+              high = "blue") + 
+              labs(x = "Years post vaccination", y = "Virus year", fill = "Titre boost") +
+        facet_grid(vars(model_type))
+ggsave(file = here::here("outputs", "hanam", "analysis", "figs", "figF.pdf"), height = 5, width = 8)
+
+```
+
+```{r}
 
 model_no <- 3
 chain_short <- as.data.frame(all_post_test_full_raw$theta_chain) %>% filter(chain_no == 1)
@@ -217,6 +404,39 @@ plot_infection_histories_long(
                         custom_ab_kin_func = custom_ab_kin_func,
                         custom_antigenic_maps_func = custom_antigenic_maps_func,
                         size_plot = 25)
+
+
+```
+
+
+```{r}
+
+# Log normal
+load(file = here::here("data", paste0("modelinfo_cross_", hanam$study_name_short, ".RDS")))
+load(file = here::here("outputs", "hanam", "fits", "dis_dep", "full", "LN_post_full.Rdata"))
+all_post_test_full_raw_ln <- post_cross$post_raw
+all_post_test_full_ln <- post_cross$post_trim
+
+load(file = here::here("outputs", "hanam", "fits", "dis_dep", "full", "SP_post_full.Rdata"))
+all_post_test_full_raw_sp <- post_cross$post_raw
+all_post_test_full_sp <- post_cross$post_trim
+
+inf_chain <- all_post_test_full_raw_sp$inf_chain
+
+sample_nos <- inf_chain %>% pull(sampno) %>% unique %>% length 
+chain <- inf_chain %>% pull(chain_no) %>% max
+
+sample_df <- inf_chain %>%
+        filter(sampno > 100000) %>%
+        group_by(year = j, sampno) %>%
+        dplyr::summarise(x = sum(x / (chain * 101))) %>% as.data.frame %>% 
+        filter(year < 49)
+
+sample_df %>% 
+        ggplot() + 
+                geom_boxplot(aes(x = as.character(year + 1967), y = x)) + 
+                scale_x_discrete(guide = guide_axis(check.overlap = TRUE)) + 
+                labs(x = "Year",  y = "Attack rate", title = "Estimated attack rate")
 
 
 ```

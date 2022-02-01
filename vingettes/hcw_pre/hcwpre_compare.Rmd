@@ -61,8 +61,8 @@ get_model_info_hcw_pre_full(hcwpre)
 
 ```{r}
 
-#load(file = here::here("data", paste0("modelinfo_cross_", hcwpre$study_name_short, ".RDS"))) #all_models_hcw_pre_cross
-#load(file = here::here("outputs", "hcw_pre", "fits", "dis_dep", "cross_sec", "trimmed_post_cross.Rdata"))
+load(file = here::here("data", paste0("modelinfo_cross_", hcwpre$study_name_short, ".RDS"))) #all_models_hcw_pre_cross
+load(file = here::here("outputs", "hcw_pre", "fits", "dis_dep", "cross_sec", "trimmed_post_cross.Rdata"))
 all_post_test_cross <- post_cross$post_raw
 
 chain_short <- as.data.frame(all_post_test_cross[[6]]$theta_chain) %>% filter(chain_no == 1)
@@ -86,18 +86,6 @@ titre_before_infection <- FALSE
 measurement_indices_by_time <- NULL
 individuals <- unique(titre_dat$individual)
 mu_indices <- NULL
-
-y <- get_titre_predictions(chain = chain_short,
-                        infection_histories = infection_histories,
-                        vaccination_histories = vaccination_histories,
-                        titre_dat = titre_dat,
-                        individuals = 1:49,
-                        antigenic_map = antigenic_map,
-                        strain_isolation_times = strain_isolation_times,
-                        par_tab = par_tab,
-                        custom_ab_kin_func = custom_ab_kin_func,
-                        custom_antigenic_maps_func = custom_antigenic_maps_func
-                        )
 
 plot_infection_histories_long(
                         chain = chain_short,
@@ -124,12 +112,11 @@ load(file = here::here("outputs", "hcw_pre", "fits", "dis_dep", "full", "trimmed
 
 all_post_test_full_raw <- post_full$post_raw
 all_post_test_full <- post_full$post_trim
-post_out_trim <- all_post_test_full[[1]][[1]]
+post_out_trim <- all_post_test_full[[1]][[2]]
 
 mu_short_vac_v <- post_out_trim$mu_short_vac
 wane_vac_v <- post_out_trim$wane_vac
 mu_v <- post_out_trim$mu
-mu_vac_v <- post_out_trim$mu_vac
 
 sero_data <- all_models_hcw_pre_full[[1]]$create_post$titre_data 
 sero_data_base <- sero_data %>% 
