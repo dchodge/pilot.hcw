@@ -133,10 +133,22 @@ There were 50 or more warnings (use warnings() to see the first 50)
 +         filename = "dis_dep",
 +         cross_sectional = FALSE,
 +         continue_run = FALSE)
-starting worker pid=100284 on localhost:11418 at 15:58:33.966
-starting worker pid=100281 on localhost:11418 at 15:58:33.966
-starting worker pid=100283 on localhost:11418 at 15:58:33.966
-starting worker pid=100282 on localhost:11418 at 15:58:33.966
+starting worker pid=12430 on localhost:11966 at 21:21:18.715
+starting worker pid=12429 on localhost:11966 at 21:21:18.778
+starting worker pid=12427 on localhost:11966 at 21:21:18.793
+starting worker pid=12428 on localhost:11966 at 21:21:18.800
 Error in all_models_hanam[[taskIdInteger]] : subscript out of bounds
 Calls: setup_run_serosolver -> dir.create -> <Anonymous> -> <Anonymous> -> path
+Execution halted
+Error in unserialize(node$con) : error reading from connection
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCKnode -> unserialize
+Execution halted
+Error in unserialize(node$con) : error reading from connection
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCKnode -> unserialize
+Execution halted
+Error in unserialize(node$con) : error reading from connection
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCKnode -> unserialize
+Execution halted
+Error in unserialize(node$con) : error reading from connection
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCKnode -> unserialize
 Execution halted
